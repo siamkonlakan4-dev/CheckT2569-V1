@@ -728,6 +728,7 @@ function renderReports(){
   const today=new Date().toISOString().slice(0,10);
   document.getElementById('rFrom').value=today;
   document.getElementById('rTo').value=today;
+  reportTypeChange();
   api('getActivities').then(function(list){
     activitiesCache=list;
     document.getElementById('rActivity').innerHTML='<option value="">ทุกกิจกรรม</option>'
@@ -735,6 +736,30 @@ function renderReports(){
   });
 }
 let reportData=[];
+function reportTypeChange(){
+  const t=document.getElementById('rType').value;
+  const boxFrom=document.getElementById('boxFrom');
+  const boxTo=document.getElementById('boxTo');
+  const boxCode=document.getElementById('boxCode');
+  // ค่าเริ่มต้น: ซ่อนช่องรหัส แสดงช่องวันที่
+  boxCode.style.display='none';
+  boxFrom.style.display='';
+  boxTo.style.display='';
+  if(t==='personal'){
+    // รายบุคคล: โชว์ช่องรหัส ซ่อนช่องวันที่ (ดูทุกช่วงเวลาของคนคนนั้น)
+    boxCode.style.display='';
+    boxFrom.style.display='none';
+    boxTo.style.display='none';
+  }else if(t==='monthly'){
+    // รายเดือน: ใช้แค่ "จากวันที่" เป็นตัวเลือกเดือน ซ่อนช่องถึงวันที่
+    boxTo.style.display='none';
+  }else if(t==='year'||t==='term'){
+    // รายปี/ภาคเรียน: ใช้ค่าจากตั้งค่า ไม่ต้องเลือกวันที่
+    boxFrom.style.display='none';
+    boxTo.style.display='none';
+  }
+}
+  
 function runReport(){
   const t=document.getElementById('rType').value;
   const f={dateFrom:document.getElementById('rFrom').value, dateTo:document.getElementById('rTo').value,
