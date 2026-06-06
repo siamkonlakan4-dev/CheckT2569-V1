@@ -183,8 +183,9 @@ let lastScan = {code:'', t:0};
 const LOGO = 'https://img1.pic.in.th/images/-36d2aeeb9dc42f62.jpg';
 
 const MENU = {
-  dashboard:{icon:'speedometer2', title:'แดชบอร์ด', roles:['admin','director']},
+  dashboard:{icon:'speedometer2', title:'แดชบอร์ด', roles:['admin','teacher','director']},
   checkin:{icon:'qr-code-scan', title:'เช็กชื่อหน้าเสาธง', roles:['admin','teacher']},
+  studentlist:{icon:'list-ul', title:'รายชื่อนักเรียน', roles:['admin','teacher','director']},
   students:{icon:'people-fill', title:'จัดการนักเรียน', roles:['admin']},
   cards:{icon:'card-heading', title:'พิมพ์บัตรนักเรียน', roles:['admin']},
   reports:{icon:'file-earmark-bar-graph', title:'รายงาน', roles:['admin','teacher','director']},
@@ -303,8 +304,9 @@ function navigate(page){
   });
   document.getElementById('pageTitle').innerText = MENU[page].title;
   document.getElementById('sidebar').classList.remove('show');
-  ({dashboard:renderDashboard, checkin:renderCheckin, students:renderStudents,
-    cards:renderCards, reports:renderReports, users:renderUsers, settings:renderSettings})[page]();
+  ({dashboard:renderDashboard, checkin:renderCheckin, studentlist:renderStudentList,
+    students:renderStudents, cards:renderCards, reports:renderReports,
+    users:renderUsers, settings:renderSettings})[page]();
 }
 
 /* ============ DASHBOARD ============ */
@@ -562,6 +564,53 @@ function downloadTemplate(){
   const ws=XLSX.utils.json_to_sheet([{'รหัสนักเรียน':'10001','เลขที่':'1','คำนำหน้า':'เด็กชาย','ชื่อ-สกุล':'สมชาย ใจดี','ชั้น':'ป.6','รูป':''}]);
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'นักเรียน');
   XLSX.writeFile(wb,'template_นักเรียน.xlsx');
+}
+
+/* ============ STUDENT LIST (อ่านอย่างเดียว: ครูเวร/ผู้บริหาร) ============ */
+let studentListCache=[];
+function renderStudentList(){
+  document.getElementById('content').innerHTML =
+  '<div class="card mb-3"><div class="card-header"><i class="bi bi-funnel"></i> ค้นหารายชื่อนักเรียน</div>'
+  +'<div class="card-body"><div class="row g-2 align-items-end">'
+  +'<div class="col-md-5"><label class="form-label">ค้นหา (รหัส หรือ ชื่อ-สกุล)</label>'
+  +'<input id="slSearch" class="form-control" placeholder="พิมพ์รหัสหรือชื่อ" oninput="filterStudentList()"></div>'
+  +'<div class="col-md-4"><label class="form-label">เลือกชั้น/ห้อง</label>'
+  +'<select id="slGrade" class="form-select" onchange="filterStudentList()"><option value="">ทุกชั้น</option></select></div>'
+  +'<div class="col-md-3"><label class="form-label">จำนวนที่พบ</label>'
+  +'<div class="form-control bg-light fw-bold" id="slCount">0 คน</div></div>'
+  +'</div></div></div>'
+  +'<div class="card"><div class="card-header"><i class="bi bi-people-fill"></i> รายชื่อนักเรียน</div>'
+  +'<div class="card-body table-responsive" style="max-height:560px;overflow:auto;">'
+  +'<table class="table table-hover table-sm"><thead class="table-light" style="position:sticky;top:0;">'
+  +'<tr><th>รูป</th><th>รหัส</th><th>เลขที่</th><th>ชื่อ-สกุล</th><th>ชั้น</th></tr></thead>'
+  +'<tbody id="slBody"></tbody></table></div></div>';
+  showLoader(true);
+  api('getStudents').then(function(list){
+    showLoader(false);
+    studentListCache = list;
+    const grades=[...new Set(list.map(function(s){return s.grade;}).filter(Boolean))].sort();
+    document.getElementById('slGrade').innerHTML='<option value="">ทุกชั้น</option>'
+      + grades.map(function(g){return '<option>'+esc(g)+'</option>';}).join('');
+    filterStudentList();
+  }).catch(function(e){ showLoader(false); toast('error','โหลดรายชื่อไม่ได้: '+e.message); });
+}
+function filterStudentList(){
+  const q=(document.getElementById('slSearch').value||'').trim().toLowerCase();
+  const g=document.getElementById('slGrade').value;
+  const rows=studentListCache.filter(function(s){
+    const matchGrade = !g || s.grade===g;
+    const hay = ((s.code||'')+' '+(s.prefix||'')+(s.name||'')).toLowerCase();
+    const matchText = !q || hay.indexOf(q)!==-1;
+    return matchGrade && matchText;
+  });
+  document.getElementById('slCount').innerText = rows.length+' คน';
+  document.getElementById('slBody').innerHTML = rows.map(function(s){
+    const img = s.photo
+      ? '<img src="'+esc(s.photo)+'" class="student-photo">'
+      : '<div class="student-photo d-flex align-items-center justify-content-center"><i class="bi bi-person"></i></div>';
+    return '<tr><td>'+img+'</td><td>'+esc(s.code)+'</td><td>'+esc(s.no)+'</td>'
+      +'<td>'+esc((s.prefix||'')+s.name)+'</td><td>'+esc(s.grade)+'</td></tr>';
+  }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่พบนักเรียน</td></tr>';
 }
 
 /* ============ STUDENT CARDS ============ */
