@@ -188,6 +188,7 @@ const MENU = {
   studentlist:{icon:'list-ul', title:'รายชื่อนักเรียน', roles:['admin','teacher','director']},
   students:{icon:'people-fill', title:'จัดการนักเรียน', roles:['admin']},
   cards:{icon:'card-heading', title:'พิมพ์บัตรนักเรียน', roles:['admin']},
+  activities:{icon:'calendar-event', title:'จัดการกิจกรรม', roles:['admin']},
   reports:{icon:'file-earmark-bar-graph', title:'รายงาน', roles:['admin','teacher','director']},
   users:{icon:'person-gear', title:'จัดการผู้ใช้งาน', roles:['admin']},
   settings:{icon:'gear-fill', title:'ตั้งค่าปีการศึกษา', roles:['admin']}
@@ -306,7 +307,7 @@ function navigate(page){
   document.getElementById('sidebar').classList.remove('show');
   ({dashboard:renderDashboard, checkin:renderCheckin, studentlist:renderStudentList,
     students:renderStudents, cards:renderCards, reports:renderReports,
-    users:renderUsers, settings:renderSettings})[page]();
+    activities:renderActivities, users:renderUsers, settings:renderSettings})[page]();
 }
 
 /* ============ DASHBOARD ============ */
@@ -359,7 +360,11 @@ function statCard(bg,icon,label,val){
 /* ============ CHECK-IN (กล้องสด) ============ */
 function renderCheckin(){
   document.getElementById('content').innerHTML =
-  '<div class="row g-3">'
+  '<div class="card mb-3"><div class="card-body d-flex flex-wrap align-items-center gap-2">'
+  +'<label class="fw-bold mb-0"><i class="bi bi-calendar-event"></i> กิจกรรม:</label>'
+  +'<select id="checkinActivity" class="form-select" style="max-width:340px;" onchange="onActivityChange()"></select>'
+  +'<span class="text-muted small" id="actHint"></span></div></div>'
+  + '<div class="row g-3">'
   + '<div class="col-lg-5"><div class="card"><div class="card-header"><i class="bi bi-qr-code-scan"></i> สแกน QR Code / Barcode</div>'
   + '<div class="card-body text-center">'
   + '<div id="reader"></div>'
@@ -378,7 +383,16 @@ function renderCheckin(){
   + '<table class="table table-sm table-hover"><thead class="table-light" style="position:sticky;top:0;"><tr>'
   + '<th>เวลา</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th></tr></thead>'
   + '<tbody id="liveTable"></tbody></table></div></div></div></div>';
-  refreshLive();
+
+  api('getActivities').then(function(list){
+    activitiesCache=list;
+    const open=list.filter(function(a){return a.status==='เปิด';});
+    const sel=document.getElementById('checkinActivity');
+    sel.innerHTML = open.map(function(a){return '<option>'+esc(a.name)+'</option>';}).join('')
+      || '<option>เข้าแถวหน้าเสาธง</option>';
+    currentCheckinActivity = sel.value;
+    onActivityChange();
+  });
 }
 
 function startScanner(){
@@ -432,14 +446,14 @@ function doManual(){
   document.getElementById('manualCode').focus();
 }
 function submitCheckin(code){
-  api('checkIn',String(code).trim(),currentUser.name).then(function(res){
+  api('checkIn',String(code).trim(),currentUser.name,currentCheckinActivity).then(function(res){
     if(res.ok){ beep(true); toast('success','✅ '+res.student.name+' ('+res.status+')'); refreshLive(true); }
     else if(res.type==='duplicate'){ beep(false); toast('info','⚠️ '+res.message); }
     else{ beep(false); toast('error','❌ '+res.message); }
   }).catch(function(e){beep(false);toast('error',e.message);});
 }
 function refreshLive(flash){
-  api('getTodayAttendance').then(function(rows){
+  api('getTodayAttendance',currentCheckinActivity).then(function(rows){
     const cnt=document.getElementById('todayCount'); if(cnt) cnt.innerText = rows.length+' คน';
     const tb=document.getElementById('liveTable');
     if(!tb)return;
@@ -448,7 +462,7 @@ function refreshLive(flash){
       return '<tr class="'+(flash&&i===0?'scan-result-row':'')+'"><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.code)+'</td>'
         +'<td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td>'
         +'<td><span class="badge '+badge+'">'+r.status+'</span></td></tr>';
-    }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ยังไม่มีการเช็กชื่อวันนี้</td></tr>';
+    }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ยังไม่มีการเช็กชื่อกิจกรรมนี้วันนี้</td></tr>';
   });
 }
 
@@ -676,6 +690,7 @@ function renderReports(){
   +'<div class="col-md-3"><label class="form-label">ประเภท</label><select id="rType" class="form-select" onchange="reportTypeChange()">'
     +'<option value="daily">รายวัน</option><option value="monthly">รายเดือน</option><option value="term">รายภาคเรียน</option>'
     +'<option value="year">รายปีการศึกษา</option><option value="personal">รายบุคคล</option><option value="range">ช่วงวันที่</option></select></div>'
+  +'<div class="col-md-3"><label class="form-label">กิจกรรม</label><select id="rActivity" class="form-select"><option value="">ทุกกิจกรรม</option></select></div>'
   +'<div class="col-md-3" id="boxFrom"><label class="form-label">จากวันที่</label><input type="date" id="rFrom" class="form-control"></div>'
   +'<div class="col-md-3" id="boxTo"><label class="form-label">ถึงวันที่</label><input type="date" id="rTo" class="form-control"></div>'
   +'<div class="col-md-3" id="boxCode" style="display:none;"><label class="form-label">รหัสนักเรียน</label><input id="rCode" class="form-control" placeholder="รหัส"></div>'
@@ -687,21 +702,23 @@ function renderReports(){
   +'<button class="btn btn-outline-danger btn-sm" onclick="exportReportPDF()"><i class="bi bi-file-earmark-pdf"></i> PDF</button></div></div>'
   +'<div class="card-body"><div id="reportSummary" class="row g-2 mb-3"></div>'
   +'<div class="table-responsive"><table id="reportTable" class="table table-hover" style="width:100%">'
-  +'<thead><tr><th>วันที่</th><th>เวลา</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th><th>ผู้บันทึก</th></tr></thead>'
+  +'<thead><tr><th>วันที่</th><th>เวลา</th><th>กิจกรรม</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th><th>ผู้บันทึก</th></tr></thead>'
   +'<tbody></tbody></table></div></div></div>';
   const today=new Date().toISOString().slice(0,10);
   document.getElementById('rFrom').value=today;
   document.getElementById('rTo').value=today;
-}
-function reportTypeChange(){
-  const t=document.getElementById('rType').value;
-  document.getElementById('boxCode').style.display = t==='personal'?'block':'none';
+  api('getActivities').then(function(list){
+    activitiesCache=list;
+    document.getElementById('rActivity').innerHTML='<option value="">ทุกกิจกรรม</option>'
+      + list.map(function(a){return '<option>'+esc(a.name)+'</option>';}).join('');
+  });
 }
 let reportData=[];
 function runReport(){
   const t=document.getElementById('rType').value;
   const f={dateFrom:document.getElementById('rFrom').value, dateTo:document.getElementById('rTo').value,
-    grade:document.getElementById('rGrade').value.trim()};
+    grade:document.getElementById('rGrade').value.trim(),
+    activity:document.getElementById('rActivity').value};
   if(t==='monthly'){ const d=new Date(f.dateFrom||new Date());
     f.dateFrom=new Date(d.getFullYear(),d.getMonth(),1).toISOString().slice(0,10);
     f.dateTo=new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10); }
@@ -719,18 +736,15 @@ function runReport(){
     if($.fn.dataTable.isDataTable('#reportTable')) $('#reportTable').DataTable().destroy();
     $('#reportTable tbody').html(rows.map(function(r){
       const b=r.status==='มาเรียน'?'badge-present':'badge-late';
-      return '<tr><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td>'
+      return '<tr><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.activity)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td>'
         +'<td>'+esc(r.grade)+'</td><td><span class="badge '+b+'">'+r.status+'</span></td><td>'+esc(r.recorder)+'</td></tr>';
     }).join(''));
     $('#reportTable').DataTable({language:thaiDT(),order:[[0,'desc']],pageLength:25});
   });
 }
-function sumBox(color,label,val){
-  return '<div class="col-4"><div class="alert alert-'+color+' text-center mb-0 py-2"><div class="small">'+label+'</div><h4 class="mb-0">'+val+'</h4></div></div>';
-}
 function exportReportExcel(){
   if(!reportData.length){toast('warning','ไม่มีข้อมูล');return;}
-  const data=reportData.map(function(r){return {'วันที่':fmtThaiDate(r.date),'เวลา':fmtThaiTime(r.time),'รหัส':r.code,'ชื่อ-สกุล':r.name,'ชั้น':r.grade,'สถานะ':r.status,'ผู้บันทึก':r.recorder};});
+  const data=reportData.map(function(r){return {'วันที่':fmtThaiDate(r.date),'เวลา':fmtThaiTime(r.time),'กิจกรรม':r.activity,'รหัส':r.code,'ชื่อ-สกุล':r.name,'ชั้น':r.grade,'สถานะ':r.status,'ผู้บันทึก':r.recorder};});
   const ws=XLSX.utils.json_to_sheet(data); const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'รายงาน');
   XLSX.writeFile(wb,'รายงานเช็กชื่อ_'+new Date().toISOString().slice(0,10)+'.xlsx');
@@ -739,18 +753,21 @@ function exportReportPDF(){
   if(!reportData.length){toast('warning','ไม่มีข้อมูล');return;}
   const present=reportData.filter(function(r){return r.status==='มาเรียน';}).length;
   const late=reportData.filter(function(r){return r.status==='มาสาย';}).length;
-  const rows=reportData.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td><td>'+r.status+'</td></tr>';}).join('');
+  const rows=reportData.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.activity)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td><td>'+r.status+'</td></tr>';}).join('');
   const w=window.open('','_blank');
   w.document.write('<html><head><title>รายงานเช็กชื่อ</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">'
     +'<style>body{font-family:Sarabun,sans-serif;padding:20px;}h3,h4{text-align:center;margin:2px;}'
     +'table{width:100%;border-collapse:collapse;margin-top:12px;}th,td{border:1px solid #999;padding:5px 8px;font-size:13px;}'
     +'th{background:#1e3a8a;color:#fff;}.summary{text-align:center;margin:10px;}</style></head><body>'
-    +'<h3>โรงเรียนสยามกลการ 4 | สพป.มุกดาหาร</h3><h4>รายงานการเช็กชื่อหน้าเสาธง</h4>'
+    +'<h3>โรงเรียนสยามกลการ 4 | สพป.มุกดาหาร</h3><h4>รายงานการเช็กชื่อ</h4>'
     +'<div class="summary">รวม '+reportData.length+' รายการ | มาเรียน '+present+' | มาสาย '+late+'</div>'
-    +'<table><thead><tr><th>#</th><th>วันที่</th><th>เวลา</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<table><thead><tr><th>#</th><th>วันที่</th><th>เวลา</th><th>กิจกรรม</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table>'
     +'<p style="margin-top:30px;text-align:right;">ผู้พิมพ์รายงาน: '+esc(currentUser.name)+'</p></body></html>');
   w.document.close(); setTimeout(function(){w.print();},800);
+}
+function sumBox(color,label,val){
+  return '<div class="col-4"><div class="alert alert-'+color+' text-center mb-0 py-2"><div class="small">'+label+'</div><h4 class="mb-0">'+val+'</h4></div></div>';
 }
 
 /* ============ USERS ============ */
@@ -804,6 +821,66 @@ function delUser(row,name){
   .then(function(r){if(r.isConfirmed){api('deleteUser',row).then(function(){toast('success','ลบแล้ว');loadUsers();});}});
 }
 
+/* ============ ACTIVITIES (แอดมิน) ============ */
+let activitiesCache=[];
+let currentCheckinActivity='เข้าแถวหน้าเสาธง';
+function renderActivities(){
+  document.getElementById('content').innerHTML =
+  '<div class="card"><div class="card-header d-flex justify-content-between align-items-center">'
+  +'<span><i class="bi bi-calendar-event"></i> จัดการกิจกรรม</span>'
+  +'<button class="btn btn-success btn-sm" onclick="activityModal()"><i class="bi bi-plus-lg"></i> เพิ่มกิจกรรม</button></div>'
+  +'<div class="card-body table-responsive"><table class="table table-hover"><thead><tr>'
+  +'<th>ชื่อกิจกรรม</th><th>เวลาเข้า (หลังเวลานี้ = สาย)</th><th>สถานะ</th><th>จัดการ</th></tr></thead>'
+  +'<tbody id="actBody"></tbody></table></div></div>';
+  loadActivities();
+}
+function loadActivities(){
+  showLoader(true);
+  api('getActivities').then(function(list){
+    showLoader(false);
+    activitiesCache=list;
+    document.getElementById('actBody').innerHTML = list.map(function(a){
+      return '<tr><td class="fw-bold">'+esc(a.name)+'</td><td>'+esc(a.lateAfter)+' น.</td>'
+        +'<td><span class="badge '+(a.status==='เปิด'?'bg-success':'bg-secondary')+'">'+esc(a.status)+'</span></td>'
+        +'<td><button class="btn btn-sm btn-warning" onclick="editActivity('+a.row+')"><i class="bi bi-pencil"></i></button> '
+        +'<button class="btn btn-sm btn-danger" onclick="delActivity('+a.row+',\''+esc(a.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+    }).join('') || '<tr><td colspan="4" class="text-center text-muted py-3">ยังไม่มีกิจกรรม</td></tr>';
+  });
+}
+function activityModal(a){
+  a=a||{row:'',id:'',name:'',lateAfter:'08:00',status:'เปิด'};
+  Swal.fire({title:a.row?'แก้ไขกิจกรรม':'เพิ่มกิจกรรม',width:500,html:
+    '<div class="text-start">'
+    +'<div class="mb-2"><label class="form-label">ชื่อกิจกรรม*</label><input id="a_name" class="form-control" value="'+esc(a.name)+'" placeholder="เช่น เข้าแถวหน้าเสาธง"></div>'
+    +'<div class="mb-2"><label class="form-label">เวลาเข้า (หลังเวลานี้ถือว่ามาสาย)</label><input type="time" id="a_late" class="form-control" value="'+esc(a.lateAfter||'08:00')+'"></div>'
+    +'<div class="mb-2"><label class="form-label">สถานะ</label><select id="a_status" class="form-select">'
+      +['เปิด','ปิด'].map(function(s){return '<option '+(a.status===s?'selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'
+    +'</div>',
+    showCancelButton:true,confirmButtonText:'บันทึก',cancelButtonText:'ยกเลิก',confirmButtonColor:'#1e3a8a',
+    didOpen:function(){window._aRow=a.row; window._aId=a.id;},
+    preConfirm:function(){
+      const d={row:window._aRow,id:window._aId,name:val('a_name'),lateAfter:val('a_late'),status:val('a_status')};
+      if(!d.name){Swal.showValidationMessage('กรอกชื่อกิจกรรม');return false;}
+      return d;
+    }
+  }).then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('saveActivity',r.value).then(function(res){showLoader(false);
+      if(res.ok){toast('success','บันทึกแล้ว');loadActivities();}else Swal.fire('ผิดพลาด',res.message,'error');});}});
+}
+function editActivity(row){activityModal(activitiesCache.find(function(a){return a.row===row;}));}
+function delActivity(row,name){
+  Swal.fire({title:'ลบกิจกรรม?',text:name,icon:'warning',showCancelButton:true,confirmButtonText:'ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){if(r.isConfirmed){api('deleteActivity',row).then(function(){toast('success','ลบแล้ว');loadActivities();});}});
+}
+function onActivityChange(){
+  const sel=document.getElementById('checkinActivity');
+  if(sel) currentCheckinActivity=sel.value;
+  const a=activitiesCache.find(function(x){return x.name===currentCheckinActivity;});
+  const hint=document.getElementById('actHint');
+  if(hint) hint.innerText = a?('นับว่ามาสายหลัง '+a.lateAfter+' น.'):'';
+  refreshLive();
+}
+  
 /* ============ SETTINGS ============ */
 function renderSettings(){
   document.getElementById('content').innerHTML='<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
