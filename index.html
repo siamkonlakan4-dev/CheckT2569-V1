@@ -178,6 +178,23 @@ Developed by KRU SUNSIAM4 (Mr.CHANNARONG MONGKOL)
 const API_URL = 'https://script.google.com/macros/s/AKfycbzpSdjoNFde4Mdijctk1GqYGs4VCYoGjLihN-4wJPEdiwpSKOu8H7dN2goYBSbPTH3i5w/exec';
 
 let currentUser = null;
+const SESSION_KEY = 'sk4_session';
+const SESSION_HOURS = 1; // ให้ session หมดอายุใน 12 ชม. (ปรับได้)
+
+function saveSession(user){
+  const payload = { user: user, exp: Date.now() + SESSION_HOURS*3600*1000 };
+  try{ localStorage.setItem(SESSION_KEY, JSON.stringify(payload)); }catch(e){}
+}
+function loadSession(){
+  try{
+    const raw = localStorage.getItem(SESSION_KEY);
+    if(!raw) return null;
+    const p = JSON.parse(raw);
+    if(!p || !p.user || !p.exp || Date.now() > p.exp){ localStorage.removeItem(SESSION_KEY); return null; }
+    return p.user;
+  }catch(e){ return null; }
+}
+function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
 let settings = {};
 let qrScanner = null;
 let lastScan = {code:'', t:0};
@@ -267,14 +284,17 @@ function doLogin(){
   api('login',u,p).then(function(res){
     showLoader(false);
     if(!res.ok){Swal.fire('เข้าสู่ระบบไม่สำเร็จ',res.message,'error');return;}
+
     currentUser = res.user;
+    saveSession(currentUser);
+    startApp();
     startApp();
   }).catch(function(e){showLoader(false);Swal.fire('ผิดพลาด','เชื่อมต่อ API ไม่ได้: '+e.message,'error');});
 }
 function logout(){
   Swal.fire({title:'ออกจากระบบ?',icon:'question',showCancelButton:true,
     confirmButtonText:'ออกจากระบบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
-  .then(function(r){ if(r.isConfirmed){ stopScanner(); location.reload(); }});
+  .then(function(r){ if(r.isConfirmed){ stopScanner(); clearSession(); location.reload(); }});
 }
 
 function startApp(){
@@ -907,6 +927,11 @@ function thaiDT(){
     paginate:{first:'หน้าแรก',last:'หน้าสุดท้าย',next:'ถัดไป',previous:'ก่อนหน้า'}};
 }
 
+  // คืนสถานะล็อกอินอัตโนมัติเมื่อรีเฟรชหน้า
+(function restoreLogin(){
+  const u = loadSession();
+  if(u){ currentUser = u; startApp(); }
+})();
 setInterval(function(){ if(document.getElementById('liveTable')) refreshLive(false); },15000);
 </script>
 </body>
