@@ -30,7 +30,7 @@
   .sidebar{width:260px;min-height:100vh;position:fixed;top:0;left:0;z-index:1040;
     background:linear-gradient(180deg,#1e3a8a,#1e40af);transition:.3s;overflow-y:auto;}
   .sidebar .logo-box{padding:18px;text-align:center;border-bottom:1px solid rgba(255,255,255,.15);}
-  .sidebar .logo-box img{width:64px;height:64px;border-radius:0%;object-fit:cover;border:3px solid #fff;background:transparent;}
+  .sidebar .logo-box img{width:64px;height:64px;border-radius:0%;object-fit:cover;border:0px solid #fff;background:transparent;}
   .nav-link-side{color:#cbd5e1;padding:12px 20px;display:flex;align-items:center;gap:12px;
     border-radius:10px;margin:4px 12px;transition:.2s;cursor:pointer;font-weight:500;}
   .nav-link-side:hover{background:rgba(255,255,255,.1);color:#fff;}
@@ -127,7 +127,7 @@
 <div id="appScreen" style="display:none;">
   <div class="sidebar" id="sidebar">
     <div class="logo-box">
-      <img src="https://img1.pic.in.th/images/-36d2aeeb9dc42f62.jpg" alt="logo" onerror="this.style.display='none'">
+      <img src="https://s.imgz.io/2026/06/06/-c6d37081117ae12e.png" alt="logo" onerror="this.style.display='none'">
       <div class="text-white fw-bold mt-2" style="font-size:.95rem;">SIAM4 Check-In - SmartScan</div>
       <div class="text-white-50" style="font-size:.75rem;">ระบบติดตามการเข้าออก รร.สยามกลการ 4</div>
     </div>
@@ -198,7 +198,7 @@ function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} 
 let settings = {};
 let qrScanner = null;
 let lastScan = {code:'', t:0};
-const LOGO = 'https://img1.pic.in.th/images/-36d2aeeb9dc42f62.jpg';
+const LOGO = 'https://s.imgz.io/2026/06/06/-c6d37081117ae12e.png';
 
 const MENU = {
   dashboard:{icon:'speedometer2', title:'แดชบอร์ด', roles:['admin','teacher','director']},
