@@ -570,6 +570,7 @@ function studentModal(s){
     +'<div class="col-12"><label class="form-label">รูปนักเรียน</label>'
       +'<input id="f_photo" class="form-control mb-1" value="'+esc(s.photo)+'" placeholder="วาง URL รูป (หรือเลือกไฟล์ด้านล่าง)">'
       +'<input type="file" id="f_photofile" class="form-control form-control-sm" accept="image/*" onchange="pickStudentPhoto(event)">'
+      +'<div id="f_photo_note" class="small text-muted mt-1"></div>'
       +'<img id="f_photo_preview" src="'+esc(s.photo)+'" style="max-height:120px;margin-top:8px;border-radius:8px;border:1px solid #e2e8f0;'+(s.photo?'':'display:none;')+'"></div>'
     +'</div></div>',
     showCancelButton:true, confirmButtonText:'<i class="bi bi-save"></i> บันทึกข้อมูล',
