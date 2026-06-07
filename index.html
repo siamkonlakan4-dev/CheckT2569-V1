@@ -606,9 +606,11 @@ function studentModal(s){
 }
 function val(id){return document.getElementById(id).value.trim();}
 // เลือกรูป: ย่อขนาดในเครื่อง + โชว์พรีวิว (ยังไม่อัปโหลด รออัปตอนกดบันทึก)
+// เลือกรูป: ย่อขนาดในเครื่อง + โชว์พรีวิว (ไม่เรียก toast เพราะจะไปปิดกล่อง Swal ที่เปิดอยู่)
 function pickStudentPhoto(e){
   const file=e.target.files[0]; if(!file)return;
-  if(!/^image\//.test(file.type)){toast('error','กรุณาเลือกไฟล์รูปภาพ');return;}
+  const note=document.getElementById('f_photo_note');
+  if(!/^image\//.test(file.type)){ if(note){note.textContent='⚠️ กรุณาเลือกไฟล์รูปภาพ';note.className='text-danger small';} return; }
   const reader=new FileReader();
   reader.onload=function(){
     const img=new Image();
@@ -621,10 +623,10 @@ function pickStudentPhoto(e){
       pendingPhoto={ dataUrl:dataUrl, name:(file.name.replace(/\.[^.]+$/,'')||'photo')+'.jpg' };
       const prev=document.getElementById('f_photo_preview');
       if(prev){ prev.src=dataUrl; prev.style.display='block'; }
-      const f=document.getElementById('f_photo'); if(f) f.value=''; // เคลียร์ช่อง URL เพราะจะใช้รูปที่อัปใหม่แทน
-      toast('info','เลือกรูปแล้ว · กดบันทึกเพื่ออัปโหลด');
+      const f=document.getElementById('f_photo'); if(f) f.value='';
+      if(note){ note.textContent='✓ เลือกรูปแล้ว · กดบันทึกเพื่ออัปโหลด'; note.className='text-success small'; }
     };
-    img.onerror=function(){ toast('error','อ่านไฟล์รูปไม่ได้'); };
+    img.onerror=function(){ if(note){note.textContent='⚠️ อ่านไฟล์รูปไม่ได้';note.className='text-danger small';} };
     img.src=reader.result;
   };
   reader.readAsDataURL(file);
