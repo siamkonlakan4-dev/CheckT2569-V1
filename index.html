@@ -468,10 +468,22 @@ function doManual(){
 }
 function submitCheckin(code){
   api('checkIn',String(code).trim(),currentUser.name,currentCheckinActivity).then(function(res){
-    if(res.ok){ beep(true); toast('success','✅ '+res.student.name+' ('+res.status+')'); refreshLive(true); }
+    if(res.ok){ beep(true); toast('success','✅ '+res.student.name+' ('+res.status+')'); prependLiveRow(res); }
     else if(res.type==='duplicate'){ beep(false); toast('info','⚠️ '+res.message); }
     else{ beep(false); toast('error','❌ '+res.message); }
   }).catch(function(e){beep(false);toast('error',e.message);});
+}
+function prependLiveRow(res){
+  const tb=document.getElementById('liveTable'); if(!tb) return;
+  const empty=tb.querySelector('td[colspan]'); if(empty) tb.innerHTML='';
+  const badge = res.status==='มาเรียน'?'badge-present':'badge-late';
+  const tr=document.createElement('tr'); tr.className='scan-result-row';
+  tr.innerHTML='<td>'+fmtThaiTime(res.time)+'</td><td>'+esc(res.student.code)+'</td>'
+    +'<td>'+esc(res.student.name)+'</td><td>'+esc(res.student.grade)+'</td>'
+    +'<td><span class="badge '+badge+'">'+res.status+'</span></td>';
+  tb.insertBefore(tr, tb.firstChild);
+  const cnt=document.getElementById('todayCount');
+  if(cnt) cnt.innerText = tb.querySelectorAll('tr').length+' คน';
 }
 function refreshLive(flash){
   api('getTodayAttendance',currentCheckinActivity).then(function(rows){
