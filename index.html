@@ -528,29 +528,35 @@ function showStudentLookup(){
     document.body.appendChild(ov);
   }
   const thisMonth=new Date().toISOString().slice(0,7);
+    const thisMonth=new Date().toISOString().slice(0,7);
   ov.innerHTML=
    '<div style="max-width:760px;margin:0 auto;">'
+   +'<div class="text-center mb-3">'
+     +'<img src="'+LOGO+'" style="height:90px;" onerror="this.style.display=\'none\'">'
+     +'<h5 class="mt-2 mb-0">โรงเรียนสยามกลการ 4 | สพป.มุกดาหาร</h5>'
+   +'</div>'
    +'<div class="d-flex justify-content-between align-items-center mb-3">'
      +'<h4 class="mb-0"><i class="bi bi-search"></i> ตรวจสอบการเข้าร่วมกิจกรรม</h4>'
      +'<button class="btn btn-primary" onclick="closeStudentLookup()"><i class="bi bi-box-arrow-in-right"></i> ลงชื่อเข้าใช้งาน</button>'
    +'</div>'
    +'<div class="card mb-3"><div class="card-body">'
-     +'<div class="d-flex gap-2 flex-wrap align-items-end">'
-       +'<div><label class="form-label">รหัสนักเรียน</label>'
-         +'<input id="lk_code" class="form-control" style="max-width:200px;" placeholder="รหัสนักเรียน" onkeydown="if(event.key===\'Enter\')runLookup()"></div>'
-       +'<div><label class="form-label">เลขบัตรประชาชน</label>'
-         +'<input id="lk_idcard" class="form-control" style="max-width:220px;" maxlength="13" inputmode="numeric" placeholder="13 หลัก" onkeydown="if(event.key===\'Enter\')runLookup()"></div>'
-       +'<div><label class="form-label">ช่วงเวลา</label>'
-         +'<select id="lk_period" class="form-select" style="max-width:160px;" onchange="lookupPeriodChange()">'
-           +'<option value="today">รายวัน (วันนี้)</option>'
-           +'<option value="month">รายเดือน</option>'
-           +'<option value="term">ภาคเรียนปัจจุบัน</option>'
-         +'</select></div>'
+     +'<label class="form-label">รหัสประจำตัวนักเรียน + เลขบัตรประชาชน</label>'
+     +'<div class="d-flex gap-2 flex-wrap">'
+       +'<input id="lk_code" class="form-control" style="max-width:200px;" placeholder="รหัสนักเรียน" onkeydown="if(event.key===\'Enter\')runLookup()">'
+       +'<input id="lk_idcard" class="form-control" style="max-width:200px;" maxlength="13" inputmode="numeric" placeholder="เลขบัตรประชาชน 13 หลัก" onkeydown="if(event.key===\'Enter\')runLookup()">'
+       +'<select id="lk_period" class="form-select" style="max-width:160px;" onchange="lookupPeriodChange()">'
+         +'<option value="today">รายวัน (วันนี้)</option>'
+         +'<option value="month">รายเดือน</option>'
+         +'<option value="term">ภาคเรียนปัจจุบัน</option>'
+       +'</select>'
        +'<input type="month" id="lk_month" class="form-control" style="max-width:170px;display:none;" value="'+thisMonth+'">'
        +'<button class="btn btn-success" onclick="runLookup()"><i class="bi bi-search"></i> ค้นหา</button>'
      +'</div>'
    +'</div></div>'
    +'<div id="lk_result"></div>'
+   +'<footer class="text-center text-muted mt-4 pb-3" style="font-size:.85rem;">'
+     +'พัฒนาโดย นายชาญณรงค์ มงคล · โรงเรียนสยามกลการ 4 สพป.มุกดาหาร'
+   +'</footer>'
    +'</div>';
   document.getElementById('lk_code').focus();
 }
