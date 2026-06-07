@@ -550,11 +550,15 @@ function loadStudents(){
     showLoader(false);
   });
 }
+let pendingPhoto = null; // เก็บรูปที่ย่อแล้ว รออัปโหลดตอนกดบันทึก
+
 function studentModal(s){
   s = s || {row:'',code:'',no:'',prefix:'เด็กชาย',name:'',grade:'',photo:''};
+  pendingPhoto = null;
   Swal.fire({
     title: s.row?'แก้ไขนักเรียน':'เพิ่มนักเรียน',
     width:600,
+    showLoaderOnConfirm:true,
     html:
     '<div class="text-start"><div class="row g-2">'
     +'<div class="col-8"><label class="form-label">รหัสนักเรียน* <small class="text-muted">(ห้ามซ้ำ)</small></label><input id="f_code" class="form-control" value="'+esc(s.code)+'"></div>'
@@ -563,62 +567,62 @@ function studentModal(s){
       +['เด็กชาย','เด็กหญิง','นาย','นางสาว'].map(function(p){return '<option '+(s.prefix===p?'selected':'')+'>'+p+'</option>';}).join('')+'</select></div>'
     +'<div class="col-8"><label class="form-label">ชื่อ-สกุล*</label><input id="f_name" class="form-control" value="'+esc(s.name)+'"></div>'
     +'<div class="col-12"><label class="form-label">ชั้น</label><input id="f_grade" class="form-control" placeholder="เช่น ป.6" value="'+esc(s.grade)+'"></div>'
-    +'<div class="col-12"><label class="form-label">รูปนักเรียน (URL หรืออัปโหลด)</label>'
-      +'<input id="f_photo" class="form-control mb-1" value="'+esc(s.photo)+'" placeholder="วาง URL รูป">'
-     +'<input type="file" id="f_photofile" class="form-control form-control-sm" accept="image/*" onchange="uploadStudentPhoto(event)">'
-    +'<img id="f_photo_preview" src="'+esc(s.photo)+'" style="max-height:120px;margin-top:8px;border-radius:8px;border:1px solid #e2e8f0;'+(s.photo?'':'display:none;')+'"></div>'
+    +'<div class="col-12"><label class="form-label">รูปนักเรียน</label>'
+      +'<input id="f_photo" class="form-control mb-1" value="'+esc(s.photo)+'" placeholder="วาง URL รูป (หรือเลือกไฟล์ด้านล่าง)">'
+      +'<input type="file" id="f_photofile" class="form-control form-control-sm" accept="image/*" onchange="pickStudentPhoto(event)">'
+      +'<img id="f_photo_preview" src="'+esc(s.photo)+'" style="max-height:120px;margin-top:8px;border-radius:8px;border:1px solid #e2e8f0;'+(s.photo?'':'display:none;')+'"></div>'
     +'</div></div>',
-    showCancelButton:true, confirmButtonText:'บันทึก', cancelButtonText:'ยกเลิก', confirmButtonColor:'#1e3a8a',
+    showCancelButton:true, confirmButtonText:'<i class="bi bi-save"></i> บันทึกข้อมูล',
+    cancelButtonText:'ยกเลิก', confirmButtonColor:'#1e3a8a',
+    allowOutsideClick:function(){ return !Swal.isLoading(); },
     didOpen:function(){ window._editRow=s.row; },
     preConfirm:function(){
-      const d={row:window._editRow, code:val('f_code'), no:val('f_no'), prefix:val('f_prefix'),
-        name:val('f_name'), grade:val('f_grade'), photo:val('f_photo')};
-      if(!d.code||!d.name){Swal.showValidationMessage('กรอกรหัสนักเรียนและชื่อ');return false;}
+      const code=val('f_code'), name=val('f_name');
+      if(!code||!name){ Swal.showValidationMessage('กรอกรหัสนักเรียนและชื่อ'); return false; }
+      const d={row:window._editRow, code:code, no:val('f_no'), prefix:val('f_prefix'),
+        name:name, grade:val('f_grade'), photo:val('f_photo')};
+      // ถ้ามีรูปใหม่ที่เลือกไว้ อัปโหลดก่อน แล้วค่อยบันทึก (รวมเป็นขั้นตอนเดียว)
+      if(pendingPhoto){
+        return api('uploadPhoto', pendingPhoto.dataUrl, pendingPhoto.name).then(function(res){
+          if(res.ok && res.url){ d.photo=res.url; return d; }
+          throw new Error(res.message || 'ไม่ได้รับลิงก์รูป');
+        }).catch(function(err){
+          Swal.showValidationMessage('อัปโหลดรูปไม่สำเร็จ: '+err.message);
+          return false;
+        });
+      }
       return d;
     }
   }).then(function(r){
-    if(r.isConfirmed){
+    if(r.isConfirmed && r.value){
       showLoader(true);
       api('saveStudent',r.value).then(function(res){
         showLoader(false);
         if(res.ok){toast('success','บันทึกแล้ว');loadStudents();}
         else Swal.fire('ผิดพลาด',res.message,'error');
-      });
+      }).catch(function(err){ showLoader(false); Swal.fire('ผิดพลาด',err.message,'error'); });
     }
   });
 }
 function val(id){return document.getElementById(id).value.trim();}
-function uploadStudentPhoto(e){
+// เลือกรูป: ย่อขนาดในเครื่อง + โชว์พรีวิว (ยังไม่อัปโหลด รออัปตอนกดบันทึก)
+function pickStudentPhoto(e){
   const file=e.target.files[0]; if(!file)return;
   if(!/^image\//.test(file.type)){toast('error','กรุณาเลือกไฟล์รูปภาพ');return;}
   const reader=new FileReader();
   reader.onload=function(){
     const img=new Image();
     img.onload=function(){
-      // ย่อรูปกว้างไม่เกิน 400px ก่อนอัปโหลด เพื่อให้เร็วและไม่ล้มเพราะไฟล์ใหญ่
-      const max=400;
-      let w=img.width, h=img.height;
+      const max=400; let w=img.width, h=img.height;
       if(w>max){ h=Math.round(h*max/w); w=max; }
-      const cv=document.createElement('canvas');
-      cv.width=w; cv.height=h;
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
       cv.getContext('2d').drawImage(img,0,0,w,h);
       const dataUrl=cv.toDataURL('image/jpeg',0.85);
-      showLoader(true);
-      const fname=(file.name.replace(/\.[^.]+$/,'')||'photo')+'.jpg';
-      api('uploadPhoto',dataUrl,fname).then(function(res){
-        showLoader(false);
-        if(res.ok && res.url){
-          document.getElementById('f_photo').value=res.url;
-          const prev=document.getElementById('f_photo_preview');
-          if(prev){ prev.src=res.url; prev.style.display='block'; }
-          toast('success','อัปโหลดรูปแล้ว');
-        }else{
-          toast('error', res.message || 'อัปโหลดไม่สำเร็จ (ไม่ได้รับลิงก์รูป)');
-        }
-      }).catch(function(err){
-        showLoader(false);
-        Swal.fire('อัปโหลดไม่สำเร็จ','เชื่อมต่อไม่ได้ หรือไฟล์มีปัญหา: '+err.message,'error');
-      });
+      pendingPhoto={ dataUrl:dataUrl, name:(file.name.replace(/\.[^.]+$/,'')||'photo')+'.jpg' };
+      const prev=document.getElementById('f_photo_preview');
+      if(prev){ prev.src=dataUrl; prev.style.display='block'; }
+      const f=document.getElementById('f_photo'); if(f) f.value=''; // เคลียร์ช่อง URL เพราะจะใช้รูปที่อัปใหม่แทน
+      toast('info','เลือกรูปแล้ว · กดบันทึกเพื่ออัปโหลด');
     };
     img.onerror=function(){ toast('error','อ่านไฟล์รูปไม่ได้'); };
     img.src=reader.result;
