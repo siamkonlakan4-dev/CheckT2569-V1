@@ -389,6 +389,11 @@ function loadDashboard(){
       options:{plugins:{legend:{position:'bottom'}}}});
   }).catch(function(e){ c.innerHTML='<div class="alert alert-danger">โหลดข้อมูลไม่ได้: '+esc(e.message)+'</div>'; });
 }
+function statCard(bg,icon,label,val){
+  return '<div class="col-6 col-lg-3"><div class="card stat-card '+bg+'"><div class="card-body">'
+    +'<i class="bi bi-'+icon+' icon"></i><div style="opacity:.9;font-size:.9rem;">'+label+'</div>'
+    +'<h2>'+val+'</h2></div></div></div>';
+}
 
 /* ============ CHECK-IN (กล้องสด) ============ */
 function renderCheckin(){
