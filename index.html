@@ -116,6 +116,9 @@
         <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
       </button>
       <div class="text-center mt-3 small text-muted">
+        <button type="button" class="btn btn-outline-primary w-100 mt-2" onclick="showStudentLookup()">
+        <i class="bi bi-search"></i> ตรวจสอบการเข้าร่วมกิจกรรม (นักเรียน)
+        </button>
         © 2026 Siam4 Check-In<br>
         Developed by KRU SUNSiam4 (Mr.CHANNARONG MONGKOL)
       </div>
@@ -516,6 +519,88 @@ function refreshLive(flash){
   });
 }
 
+function showStudentLookup(){
+  let ov=document.getElementById('lookupOverlay');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='lookupOverlay';
+    ov.style.cssText='position:fixed;inset:0;background:#f1f5f9;z-index:3000;overflow:auto;padding:20px;';
+    document.body.appendChild(ov);
+  }
+  const thisMonth=new Date().toISOString().slice(0,7);
+  ov.innerHTML=
+   '<div style="max-width:760px;margin:0 auto;">'
+   +'<div class="d-flex justify-content-between align-items-center mb-3">'
+     +'<h4 class="mb-0"><i class="bi bi-search"></i> ตรวจสอบการเข้าร่วมกิจกรรม</h4>'
+     +'<button class="btn btn-primary" onclick="closeStudentLookup()"><i class="bi bi-box-arrow-in-right"></i> ลงชื่อเข้าใช้งาน</button>'
+   +'</div>'
+   +'<div class="card mb-3"><div class="card-body">'
+     +'<div class="d-flex gap-2 flex-wrap align-items-end">'
+       +'<div><label class="form-label">รหัสนักเรียน</label>'
+         +'<input id="lk_code" class="form-control" style="max-width:200px;" placeholder="รหัสนักเรียน" onkeydown="if(event.key===\'Enter\')runLookup()"></div>'
+       +'<div><label class="form-label">เลขบัตรประชาชน</label>'
+         +'<input id="lk_idcard" class="form-control" style="max-width:220px;" maxlength="13" inputmode="numeric" placeholder="13 หลัก" onkeydown="if(event.key===\'Enter\')runLookup()"></div>'
+       +'<div><label class="form-label">ช่วงเวลา</label>'
+         +'<select id="lk_period" class="form-select" style="max-width:160px;" onchange="lookupPeriodChange()">'
+           +'<option value="today">รายวัน (วันนี้)</option>'
+           +'<option value="month">รายเดือน</option>'
+           +'<option value="term">ภาคเรียนปัจจุบัน</option>'
+         +'</select></div>'
+       +'<input type="month" id="lk_month" class="form-control" style="max-width:170px;display:none;" value="'+thisMonth+'">'
+       +'<button class="btn btn-success" onclick="runLookup()"><i class="bi bi-search"></i> ค้นหา</button>'
+     +'</div>'
+   +'</div></div>'
+   +'<div id="lk_result"></div>'
+   +'</div>';
+  document.getElementById('lk_code').focus();
+}
+function closeStudentLookup(){
+  const ov=document.getElementById('lookupOverlay');
+  if(ov) ov.remove();
+}
+function lookupPeriodChange(){
+  const p=document.getElementById('lk_period').value;
+  document.getElementById('lk_month').style.display = (p==='month')?'':'none';
+}
+function runLookup(){
+  const code=document.getElementById('lk_code').value.trim();
+  const idcard=document.getElementById('lk_idcard').value.trim();
+  const period=document.getElementById('lk_period').value;
+  const month=document.getElementById('lk_month').value;
+  const box=document.getElementById('lk_result');
+  if(!code||!idcard){ box.innerHTML='<div class="alert alert-warning">กรุณากรอกรหัสนักเรียนและเลขบัตรประชาชน</div>'; return; }
+  box.innerHTML='<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+  api('getStudentLookup',code,idcard,period,month).then(function(res){
+    if(!res.ok){ box.innerHTML='<div class="alert alert-danger">'+esc(res.message)+'</div>'; return; }
+    const s=res.student;
+    const photo = s.photo
+      ? '<img src="'+esc(s.photo)+'" style="width:80px;height:80px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML=\'<div style=&quot;width:80px;height:80px;border-radius:10px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;&quot;><i class=&quot;bi bi-person fs-2 text-muted&quot;></i></div>\'">'
+      : '<div style="width:80px;height:80px;border-radius:10px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;"><i class="bi bi-person fs-2 text-muted"></i></div>';
+    const periodLabel = period==='today'?'วันนี้':(period==='month'?'เดือน '+month:'ภาคเรียน '+res.term+'/'+res.year);
+    const rows = res.rows.length
+      ? res.rows.map(function(r){
+          const badge=r.status==='มาเรียน'?'badge-present':(r.status==='มาสาย'?'badge-late':'badge-absent');
+          return '<tr><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.activity)+'</td><td><span class="badge '+badge+'">'+esc(r.status)+'</span></td></tr>';
+        }).join('')
+      : '<tr><td colspan="4" class="text-center text-muted py-3">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>';
+    box.innerHTML=
+     '<div class="card mb-3"><div class="card-body d-flex align-items-center gap-3">'
+       +photo
+       +'<div><h5 class="mb-1">'+esc(s.prefix)+esc(s.name)+'</h5>'
+       +'<div class="text-muted">รหัส '+esc(s.code)+' · ชั้น '+esc(s.grade)+'</div></div>'
+     +'</div></div>'
+     +'<div class="row g-2 mb-3 text-center">'
+       +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">มาเรียน</div><h4 class="text-success mb-0">'+res.present+'</h4></div></div></div>'
+       +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">มาสาย</div><h4 class="text-warning mb-0">'+res.late+'</h4></div></div></div>'
+       +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">รวมบันทึก</div><h4 class="mb-0">'+res.total+'</h4></div></div></div>'
+     +'</div>'
+     +'<div class="card"><div class="card-header"><i class="bi bi-list-ul"></i> รายละเอียด ('+periodLabel+')</div>'
+     +'<div class="card-body table-responsive"><table class="table table-hover mb-0">'
+     +'<thead><tr><th>วันที่</th><th>เวลา</th><th>กิจกรรม</th><th>สถานะ</th></tr></thead>'
+     +'<tbody>'+rows+'</tbody></table></div></div>';
+  }).catch(function(e){ box.innerHTML='<div class="alert alert-danger">เกิดข้อผิดพลาด: '+esc(e.message)+'</div>'; });
+}
+
 /* ============ STUDENTS ============ */
 let studentsCache=[];
 function renderStudents(){
@@ -553,7 +638,7 @@ function loadStudents(){
 let pendingPhoto = null; // เก็บรูปที่ย่อแล้ว รออัปโหลดตอนกดบันทึก
 
 function studentModal(s){
-  s = s || {row:'',code:'',no:'',prefix:'เด็กชาย',name:'',grade:'',photo:''};
+  s = s || {row:'',code:'',no:'',prefix:'เด็กชาย',name:'',grade:'',photo:'',hasId:false};
   pendingPhoto = null;
   Swal.fire({
     title: s.row?'แก้ไขนักเรียน':'เพิ่มนักเรียน',
@@ -567,6 +652,10 @@ function studentModal(s){
       +['เด็กชาย','เด็กหญิง','นาย','นางสาว'].map(function(p){return '<option '+(s.prefix===p?'selected':'')+'>'+p+'</option>';}).join('')+'</select></div>'
     +'<div class="col-8"><label class="form-label">ชื่อ-สกุล*</label><input id="f_name" class="form-control" value="'+esc(s.name)+'"></div>'
     +'<div class="col-12"><label class="form-label">ชั้น</label><input id="f_grade" class="form-control" placeholder="เช่น ป.6" value="'+esc(s.grade)+'"></div>'
+    +'<div class="col-12"><label class="form-label">เลขบัตรประชาชน '
+      +(s.hasId?'<small class="text-success">(มีข้อมูลแล้ว · เว้นว่างหากไม่เปลี่ยน)</small>'
+              :'<small class="text-muted">(ใช้ยืนยันตัวตนตอนนักเรียน/ผู้ปกครองค้นหา)</small>')
+      +'</label><input id="f_idcard" class="form-control" maxlength="13" inputmode="numeric" placeholder="13 หลัก"></div>'
     +'<div class="col-12"><label class="form-label">รูปนักเรียน</label>'
       +'<input id="f_photo" class="form-control mb-1" value="'+esc(s.photo)+'" placeholder="วาง URL รูป (หรือเลือกไฟล์ด้านล่าง)">'
       +'<input type="file" id="f_photofile" class="form-control form-control-sm" accept="image/*" onchange="pickStudentPhoto(event)">'
@@ -581,7 +670,7 @@ function studentModal(s){
       const code=val('f_code'), name=val('f_name');
       if(!code||!name){ Swal.showValidationMessage('กรอกรหัสนักเรียนและชื่อ'); return false; }
       const d={row:window._editRow, code:code, no:val('f_no'), prefix:val('f_prefix'),
-        name:name, grade:val('f_grade'), photo:val('f_photo')};
+        name:name, grade:val('f_grade'), photo:val('f_photo'), idcard:val('f_idcard')};
       // ถ้ามีรูปใหม่ที่เลือกไว้ อัปโหลดก่อน แล้วค่อยบันทึก (รวมเป็นขั้นตอนเดียว)
       if(pendingPhoto){
         return api('uploadPhoto', pendingPhoto.dataUrl, pendingPhoto.name).then(function(res){
