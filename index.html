@@ -334,12 +334,30 @@ function navigate(page){
 /* ============ DASHBOARD ============ */
 function renderDashboard(){
   const c = document.getElementById('content');
+  c.innerHTML =
+    '<div class="card mb-3"><div class="card-body d-flex flex-wrap align-items-center gap-2">'
+    +'<label class="fw-bold mb-0"><i class="bi bi-calendar-event"></i> กิจกรรม:</label>'
+    +'<select id="dashActivity" class="form-select" style="max-width:340px;" onchange="loadDashboard()"></select>'
+    +'</div></div><div id="dashBody"><div class="text-center py-5"><div class="spinner-border text-primary"></div></div></div>';
+  api('getActivities').then(function(list){
+    activitiesCache=list;
+    const open=list.filter(function(a){return a.status==='เปิด';});
+    const sel=document.getElementById('dashActivity');
+    sel.innerHTML = open.map(function(a){return '<option>'+esc(a.name)+'</option>';}).join('')
+      || '<option>เข้าแถวหน้าเสาธง</option>';
+    loadDashboard();
+  });
+}
+function loadDashboard(){
+  const sel=document.getElementById('dashActivity');
+  const activity = sel ? sel.value : 'เข้าแถวหน้าเสาธง';
+  const c = document.getElementById('dashBody');
   c.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-  api('getDashboardData').then(function(d){
+  api('getDashboardData',activity).then(function(d){
     let gradeRows='';
     Object.keys(d.byGrade).sort().forEach(function(g){
       const v=d.byGrade[g];
-      const pct = v.total? Math.round(v.checked/v.total*100):0;
+      const pct = v.total? Math.min(100, Math.round(v.checked/v.total*100)):0;
       gradeRows += '<tr><td>'+esc(g)+'</td><td class="text-center">'+v.total+'</td>'
         +'<td class="text-center">'+v.checked+'</td>'
         +'<td><div class="progress" style="height:18px;"><div class="progress-bar bg-success" style="width:'+pct+'%">'+pct+'%</div></div></td></tr>';
@@ -365,17 +383,11 @@ function renderDashboard(){
       datasets:[{label:'มาเรียน',data:d.trend.present,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.1)',tension:.3,fill:true},
         {label:'มาสาย',data:d.trend.late,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',tension:.3,fill:true}]},
       options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
-
     new Chart(document.getElementById('pieChart'),{type:'doughnut',
       data:{labels:['มาเรียน','มาสาย','ขาด/ยังไม่มา'],
         datasets:[{data:[d.present,d.late,d.absent],backgroundColor:['#16a34a','#f59e0b','#ef4444']}]},
       options:{plugins:{legend:{position:'bottom'}}}});
   }).catch(function(e){ c.innerHTML='<div class="alert alert-danger">โหลดข้อมูลไม่ได้: '+esc(e.message)+'</div>'; });
-}
-function statCard(bg,icon,label,val){
-  return '<div class="col-6 col-lg-3"><div class="card stat-card '+bg+'"><div class="card-body">'
-    +'<i class="bi bi-'+icon+' icon"></i><div style="opacity:.9;font-size:.9rem;">'+label+'</div>'
-    +'<h2>'+val+'</h2></div></div></div>';
 }
 
 /* ============ CHECK-IN (กล้องสด) ============ */
@@ -816,13 +828,17 @@ function exportReportPDF(){
   w.document.write('<html><head><title>รายงานเช็กชื่อ</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">'
     +'<style>body{font-family:Sarabun,sans-serif;padding:20px;}h3,h4{text-align:center;margin:2px;}'
+    +'.logo{display:block;margin:0 auto 6px;height:80px;}'
     +'table{width:100%;border-collapse:collapse;margin-top:12px;}th,td{border:1px solid #999;padding:5px 8px;font-size:13px;}'
     +'th{background:#1e3a8a;color:#fff;}.summary{text-align:center;margin:10px;}</style></head><body>'
+    +'<img class="logo" src="'+LOGO+'" onerror="this.style.display=\'none\'">'
     +'<h3>โรงเรียนสยามกลการ 4 | สพป.มุกดาหาร</h3><h4>รายงานการเช็กชื่อ</h4>'
     +'<div class="summary">รวม '+reportData.length+' รายการ | มาเรียน '+present+' | มาสาย '+late+'</div>'
-    +'<table><thead><tr><th>#</th><th>วันที่</th><th>เวลา</th><th>กิจกรรม</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table>'
-    +'<p style="margin-top:30px;text-align:right;">ผู้พิมพ์รายงาน: '+esc(currentUser.name)+'</p></body></html>');
-  w.document.close(); setTimeout(function(){w.print();},800);
+    +'<table><thead><tr><th>#</th><th>วันที่</th><th>เวลา</th><th>กิจกรรม</th><th>รหัสนักเรียน</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<p style="margin-top:30px;text-align:right;">ผู้พิมพ์รายงาน: '+esc(currentUser.name)+'</p>'
+    +'<scr'+'ipt>window.onload=function(){setTimeout(function(){window.print();},400);};</scr'+'ipt>'
+    +'</body></html>');
+  w.document.close();
 }
 function sumBox(color,label,val){
   return '<div class="col-4"><div class="alert alert-'+color+' text-center mb-0 py-2"><div class="small">'+label+'</div><h4 class="mb-0">'+val+'</h4></div></div>';
@@ -834,7 +850,12 @@ function renderUsers(){
   document.getElementById('content').innerHTML =
   '<div class="card"><div class="card-header d-flex justify-content-between align-items-center">'
   +'<span><i class="bi bi-person-gear"></i> จัดการผู้ใช้งาน</span>'
-  +'<button class="btn btn-success btn-sm" onclick="userModal()"><i class="bi bi-plus-lg"></i> เพิ่มผู้ใช้</button></div>'
+    +'<div class="d-flex gap-2">'
+  +'<button class="btn btn-success btn-sm" onclick="userModal()"><i class="bi bi-plus-lg"></i> เพิ่มผู้ใช้</button>'
+  +'<label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-filetype-csv"></i> นำเข้า CSV'
+  +'<input type="file" hidden accept=".csv,.xlsx,.xls" onchange="importUsersFile(event)"></label>'
+  +'<button class="btn btn-outline-secondary btn-sm" onclick="downloadUserTemplate()"><i class="bi bi-download"></i> เทมเพลต</button>'
+  +'</div></div>'
   +'<div class="card-body table-responsive"><table class="table table-hover"><thead><tr>'
   +'<th>ชื่อผู้ใช้</th><th>ชื่อ-สกุล</th><th>สิทธิ์</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="userBody"></tbody></table></div></div>';
   loadUsers();
@@ -851,6 +872,28 @@ function loadUsers(){
         +'<button class="btn btn-sm btn-danger" onclick="delUser('+u.row+',\''+esc(u.username)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
     }).join('');
   });
+}
+
+function importUsersFile(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const wb=XLSX.read(ev.target.result,{type:'binary'});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    if(!rows.length){toast('warning','ไฟล์ว่าง');return;}
+    showLoader(true);
+    api('importUsers',rows).then(function(res){
+      showLoader(false);
+      if(res.ok){ Swal.fire('นำเข้าเสร็จสิ้น','เพิ่ม '+res.added+' คน · ข้าม(ซ้ำ/ไม่ครบ) '+res.skipped+' คน','success'); loadUsers(); }
+      else Swal.fire('ผิดพลาด',res.message,'error');
+    }).catch(function(er){showLoader(false);toast('error',er.message);});
+  };
+  reader.readAsBinaryString(file); e.target.value='';
+}
+function downloadUserTemplate(){
+  const ws=XLSX.utils.json_to_sheet([{username:'teacher01',password:'1234',name:'ครูสมชาย ใจดี',role:'teacher',status:'ใช้งาน'}]);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Users');
+  XLSX.writeFile(wb,'template_ผู้ใช้งาน.csv',{bookType:'csv'});
 }
 function userModal(u){
   u=u||{row:'',username:'',name:'',role:'teacher',status:'ใช้งาน'};
