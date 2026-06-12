@@ -614,8 +614,8 @@ function renderStudents(){
   + '<span><i class="bi bi-people-fill"></i> ข้อมูลนักเรียน</span>'
   + '<div class="d-flex gap-2">'
   + '<button class="btn btn-success btn-sm" onclick="studentModal()"><i class="bi bi-plus-lg"></i> เพิ่มนักเรียน</button>'
-  + '<label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-file-earmark-excel"></i> นำเข้า Excel'
-  + '<input type="file" hidden accept=".xlsx,.xls" onchange="importExcel(event)"></label>'
+  + '<label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> นำเข้า Excel/CSV'
+  + '<input type="file" hidden accept=".xlsx,.xls,.csv" onchange="importExcel(event)"></label>'
   + '<button class="btn btn-outline-secondary btn-sm" onclick="downloadTemplate()"><i class="bi bi-download"></i> เทมเพลต</button>'
   + '</div></div>'
   + '<div class="card-body table-responsive"><table id="studentTable" class="table table-hover" style="width:100%">'
@@ -737,21 +737,24 @@ function importExcel(e){
   const file=e.target.files[0]; if(!file)return;
   const reader=new FileReader();
   reader.onload=function(ev){
-    const wb=XLSX.read(ev.target.result,{type:'binary'});
-    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    // raw:false + ให้ทุกค่าเป็น string เพื่อกันเลขบัตร 13 หลักเพี้ยน
+    const wb=XLSX.read(ev.target.result,{type:'binary',raw:false});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:false,defval:''});
     if(!rows.length){toast('warning','ไฟล์ว่าง');return;}
     showLoader(true);
     api('importStudents',rows).then(function(res){
       showLoader(false);
       Swal.fire('นำเข้าเสร็จสิ้น','เพิ่ม '+res.added+' คน · ข้าม(ซ้ำ) '+res.skipped+' คน','success');
       loadStudents();
-    });
+    }).catch(function(err){ showLoader(false); Swal.fire('ผิดพลาด',err.message,'error'); });
   };
   reader.readAsBinaryString(file);
   e.target.value='';
 }
 function downloadTemplate(){
-  const ws=XLSX.utils.json_to_sheet([{'รหัสนักเรียน':'10001','เลขที่':'1','คำนำหน้า':'เด็กชาย','ชื่อ-สกุล':'สมชาย ใจดี','ชั้น':'ป.6','รูป':''}]);
+  const ws=XLSX.utils.json_to_sheet([
+    {'รหัสนักเรียน':'10001','เลขที่':'1','คำนำหน้า':'เด็กชาย','ชื่อ-สกุล':'สมชาย ใจดี','ชั้น':'ป.6','เลขบัตรประชาชน':'1100701234567','รูป':''}
+  ]);
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'นักเรียน');
   XLSX.writeFile(wb,'template_นักเรียน.xlsx');
 }
