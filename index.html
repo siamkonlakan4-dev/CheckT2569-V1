@@ -210,7 +210,7 @@ const MENU = {
   studentlist:{icon:'list-ul', title:'รายชื่อนักเรียน', roles:['admin','teacher','director']},
   students:{icon:'people-fill', title:'จัดการข้อมูลนักเรียน', roles:['admin']},
   cards:{icon:'card-heading', title:'พิมพ์บัตรนักเรียน', roles:['admin']},
-  activities:{icon:'calendar-event', title:'จัดการกิจกรรม', roles:['admin']},
+  activities:{icon:'calendar-event', title:'กำหนดกิจกรรม', roles:['admin']},
   reports:{icon:'file-earmark-bar-graph', title:'รายงาน', roles:['admin','teacher','director']},
   users:{icon:'person-gear', title:'จัดการผู้ใช้งาน', roles:['admin']},
   settings:{icon:'gear-fill', title:'ตั้งค่าปีการศึกษา', roles:['admin']}
@@ -1300,7 +1300,7 @@ let currentCheckinActivity='เข้าแถวหน้าเสาธง';
 function renderActivities(){
   document.getElementById('content').innerHTML =
   '<div class="card"><div class="card-header d-flex justify-content-between align-items-center">'
-  +'<span><i class="bi bi-calendar-event"></i> จัดการกิจกรรม</span>'
+  +'<span><i class="bi bi-calendar-event"></i> กำหนดกิจกรรม</span>'
   +'<button class="btn btn-success btn-sm" onclick="activityModal()"><i class="bi bi-plus-lg"></i> เพิ่มกิจกรรม</button></div>'
   +'<div class="card-body table-responsive"><table class="table table-hover"><thead><tr>'
   +'<th>ชื่อกิจกรรม</th><th>เวลาเข้า (หลังเวลานี้ = สาย)</th><th>สถานะ</th><th>จัดการ</th></tr></thead>'
