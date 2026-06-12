@@ -206,6 +206,7 @@ const LOGO = 'https://s.imgz.io/2026/06/06/-c6d37081117ae12e.png';
 const MENU = {
   dashboard:{icon:'speedometer2', title:'แดชบอร์ด', roles:['admin','teacher','director']},
   checkin:{icon:'qr-code-scan', title:'เช็กชื่อ', roles:['admin','teacher']},
+  manual:{icon:'clipboard-check', title:'บันทึกขาด/ลา/มาสาย', roles:['admin','teacher']},
   studentlist:{icon:'list-ul', title:'รายชื่อนักเรียน', roles:['admin','teacher','director']},
   students:{icon:'people-fill', title:'จัดการข้อมูลนักเรียน', roles:['admin']},
   cards:{icon:'card-heading', title:'พิมพ์บัตรนักเรียน', roles:['admin']},
@@ -329,9 +330,10 @@ function navigate(page){
   });
   document.getElementById('pageTitle').innerText = MENU[page].title;
   document.getElementById('sidebar').classList.remove('show');
-  ({dashboard:renderDashboard, checkin:renderCheckin, studentlist:renderStudentList,
-    students:renderStudents, cards:renderCards, reports:renderReports,
-    activities:renderActivities, users:renderUsers, settings:renderSettings})[page]();
+  ({dashboard:renderDashboard, checkin:renderCheckin, manual:renderManual,
+  studentlist:renderStudentList, students:renderStudents, cards:renderCards,
+  reports:renderReports, activities:renderActivities, users:renderUsers,
+  settings:renderSettings})[page]();
 }
 
 /* ============ DASHBOARD ============ */
@@ -435,7 +437,137 @@ function renderCheckin(){
     onActivityChange();
   });
 }
+/* ============ บันทึกสถานะด้วยตนเอง (ลา/มาสาย/ขาดเรียน/อื่นๆ) ============ */
+let unrecordedCache = [];
 
+function renderManual(){
+  document.getElementById('content').innerHTML =
+  '<div class="card mb-3"><div class="card-header"><i class="bi bi-clipboard-check"></i> '
+  +'บันทึกสถานะนักเรียนที่ยังไม่ได้เช็ก (ลา / มาสาย / ขาดเรียน / อื่นๆ)</div>'
+  +'<div class="card-body"><div class="row g-2 align-items-end">'
+  +'<div class="col-md-4"><label class="form-label">กิจกรรม</label><select id="mActivity" class="form-select"></select></div>'
+  +'<div class="col-md-3"><label class="form-label">วันที่</label><input type="date" id="mDate" class="form-control"></div>'
+  +'<div class="col-md-3"><label class="form-label">ชั้น</label><select id="mGrade" class="form-select"><option value="">ทุกชั้น</option></select></div>'
+  +'<div class="col-md-2 d-grid"><button class="btn btn-primary" onclick="loadUnrecorded()"><i class="bi bi-arrow-repeat"></i> ดึงรายชื่อ</button></div>'
+  +'</div><p class="text-muted small mb-0 mt-2"><i class="bi bi-info-circle"></i> ระบบจะแสดงเฉพาะนักเรียนที่<b>ยังไม่ถูกสแกน/บันทึก</b>ในกิจกรรมและวันที่เลือก จึงไม่ซ้ำกับการเช็กชื่อปกติ</p>'
+  +'</div></div><div id="mResult"></div>';
+
+  document.getElementById('mDate').value = new Date().toISOString().slice(0,10);
+
+  api('getActivities').then(function(list){
+    activitiesCache=list;
+    const open=list.filter(function(a){return a.status==='เปิด';});
+    document.getElementById('mActivity').innerHTML =
+      open.map(function(a){return '<option>'+esc(a.name)+'</option>';}).join('')
+      || '<option>เข้าแถวหน้าเสาธง</option>';
+  });
+  api('getStudents').then(function(list){
+    const grades=[...new Set(list.map(function(s){return s.grade;}).filter(Boolean))].sort();
+    document.getElementById('mGrade').innerHTML='<option value="">ทุกชั้น</option>'
+      + grades.map(function(g){return '<option>'+esc(g)+'</option>';}).join('');
+  });
+}
+
+function loadUnrecorded(){
+  const activity=document.getElementById('mActivity').value;
+  const date=document.getElementById('mDate').value;
+  const grade=document.getElementById('mGrade').value;
+  if(!activity){ toast('warning','เลือกกิจกรรมก่อน'); return; }
+  showLoader(true);
+  api('getUnrecordedStudents',activity,date,grade).then(function(res){
+    showLoader(false);
+    unrecordedCache = res.students || [];
+    renderUnrecordedTable();
+  }).catch(function(e){ showLoader(false); Swal.fire('ผิดพลาด',e.message,'error'); });
+}
+
+function renderUnrecordedTable(){
+  const box=document.getElementById('mResult');
+  if(!unrecordedCache.length){
+    box.innerHTML='<div class="alert alert-success"><i class="bi bi-check-circle"></i> '
+      +'นักเรียนทุกคนถูกบันทึกในกิจกรรมนี้แล้ว ไม่มีรายชื่อตกค้าง</div>';
+    return;
+  }
+  const opts=['ขาดเรียน','ลา','มาสาย','อื่นๆ'];
+  const rows=unrecordedCache.map(function(s){
+    const sel='<select class="form-select form-select-sm m-status" data-code="'+esc(s.code)+'">'
+      +opts.map(function(o){return '<option'+(o==='ขาดเรียน'?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';
+    return '<tr><td><input type="checkbox" class="m-check" value="'+esc(s.code)+'" onchange="updateMSelCount()"></td>'
+      +'<td>'+esc(s.code)+'</td><td>'+esc(s.no)+'</td>'
+      +'<td>'+esc((s.prefix||'')+s.name)+'</td><td>'+esc(s.grade)+'</td>'
+      +'<td>'+sel+'</td>'
+      +'<td><input class="form-control form-control-sm m-note" data-code="'+esc(s.code)+'" placeholder="หมายเหตุ (ถ้ามี)"></td></tr>';
+  }).join('');
+
+  box.innerHTML=
+  '<div class="card"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">'
+  +'<span><i class="bi bi-list-check"></i> รายชื่อที่ยังไม่ถูกบันทึก <span class="badge bg-danger">'+unrecordedCache.length+' คน</span></span>'
+  +'<div class="d-flex flex-wrap align-items-center gap-2">'
+  +'<span class="small text-muted">ตั้งสถานะให้ที่เลือก:</span>'
+  +'<select id="bulkStatus" class="form-select form-select-sm" style="max-width:130px;">'
+  + ['ขาดเรียน','ลา','มาสาย','อื่นๆ'].map(function(o){return '<option>'+o+'</option>';}).join('')
+  +'</select>'
+  +'<button class="btn btn-outline-secondary btn-sm" onclick="applyBulkStatus()"><i class="bi bi-check2-all"></i> ตั้งให้ที่เลือก</button>'
+  +'<button class="btn btn-success btn-sm" onclick="saveManualSelected()"><i class="bi bi-save"></i> บันทึกที่เลือก (<span id="mSelCount">0</span>)</button>'
+  +'</div></div>'
+  +'<div class="card-body table-responsive"><table class="table table-hover table-sm align-middle">'
+  +'<thead class="table-light"><tr><th><input type="checkbox" id="mCheckAll" onclick="mToggleAll(this)"></th>'
+  +'<th>รหัส</th><th>เลขที่</th><th>ชื่อ-สกุล</th><th>ชั้น</th>'
+  +'<th style="min-width:120px;">สถานะ</th><th style="min-width:160px;">หมายเหตุ</th></tr></thead>'
+  +'<tbody>'+rows+'</tbody></table></div></div>';
+  updateMSelCount();
+}
+
+function mToggleAll(master){
+  document.querySelectorAll('.m-check').forEach(function(cb){ cb.checked=master.checked; });
+  updateMSelCount();
+}
+function updateMSelCount(){
+  const n=document.querySelectorAll('.m-check:checked').length;
+  const el=document.getElementById('mSelCount'); if(el) el.innerText=n;
+}
+
+// ตั้งสถานะเดียวกันให้ทุกแถวที่ติ๊กเลือก
+function applyBulkStatus(){
+  const status=document.getElementById('bulkStatus').value;
+  const checked=[...document.querySelectorAll('.m-check:checked')].map(function(c){return c.value;});
+  if(!checked.length){ toast('warning','ยังไม่ได้เลือกรายการ'); return; }
+  document.querySelectorAll('.m-status').forEach(function(sel){
+    if(checked.indexOf(sel.dataset.code)!==-1) sel.value=status;
+  });
+  toast('success','ตั้งสถานะ "'+status+'" ให้ '+checked.length+' รายการแล้ว');
+}
+
+// บันทึกเฉพาะแถวที่ติ๊กเลือก
+function saveManualSelected(){
+  const checked=[...document.querySelectorAll('.m-check:checked')];
+  if(!checked.length){ toast('warning','ยังไม่ได้เลือกนักเรียน'); return; }
+  const items=checked.map(function(cb){
+    const code=cb.value;
+    const statusSel=document.querySelector('.m-status[data-code="'+code+'"]');
+    const noteInp=document.querySelector('.m-note[data-code="'+code+'"]');
+    return { code:code,
+             status:statusSel?statusSel.value:'ขาดเรียน',
+             note:noteInp?noteInp.value.trim():'' };
+  });
+  const activity=document.getElementById('mActivity').value;
+  const date=document.getElementById('mDate').value;
+  Swal.fire({title:'บันทึกสถานะ?',
+    html:'ต้องการบันทึกสถานะให้นักเรียน <b>'+items.length+'</b> คน<br>'
+        +'กิจกรรม <b>'+esc(activity)+'</b> · วันที่ <b>'+fmtThaiDate(date)+'</b> ใช่หรือไม่',
+    icon:'question',showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-save"></i> บันทึก',cancelButtonText:'ยกเลิก',confirmButtonColor:'#1e3a8a'})
+  .then(function(r){
+    if(!r.isConfirmed) return;
+    showLoader(true);
+    api('recordManualStatus',items,activity,date,currentUser.name).then(function(res){
+      showLoader(false);
+      Swal.fire('บันทึกเสร็จสิ้น','บันทึก '+res.added+' คน · ข้าม(ซ้ำ) '+res.skipped+' คน','success');
+      loadUnrecorded(); // รีเฟรชรายชื่อที่เหลือ
+    }).catch(function(e){ showLoader(false); Swal.fire('ผิดพลาด',e.message,'error'); });
+  });
+}
+  
 function startScanner(){
   if(location.protocol!=='https:' && location.hostname!=='localhost'){
     Swal.fire('ใช้กล้องไม่ได้','กล้องทำงานได้เฉพาะการเชื่อมต่อแบบ HTTPS เท่านั้น','warning');
