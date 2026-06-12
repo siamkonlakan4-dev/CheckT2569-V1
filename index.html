@@ -1158,6 +1158,46 @@ setInterval(function(){ if(document.getElementById('liveTable')) refreshLive(fal
     </div>
   </div>
 </div>
+
+async function api(fn, args) {
+  const res = await fetch(WEBAPP_URL, { method: 'POST', body: JSON.stringify({ fn, args: args || [] }) });
+  const j = await res.json();
+  return j.ok ? j.data : Promise.reject(j.error);
+}
+
+function parseStudentCSV(text) {
+  const lines = text.split(/\r?\n/).filter(function (l) { return l.trim() !== ''; });
+  if (!lines.length) return [];
+  const headers = lines[0].split(',').map(function (h) { return h.trim(); });
+  return lines.slice(1).map(function (line) {
+    const c = line.split(',');
+    const r = {};
+    headers.forEach(function (h, i) { r[h] = (c[i] || '').trim(); });
+    return {
+      code: r['รหัสนักเรียน'] || '', no: r['เลขที่'] || '', prefix: r['คำนำหน้า'] || '',
+      name: r['ชื่อ-สกุล'] || '', grade: r['ชั้น'] || '', idcard: r['เลขบัตรประชาชน'] || ''
+    };
+  });
+}
+// ใช้: const list = parseStudentCSV(fileText); await api('importStudents', [list]);
+
+async function confirmDeleteAll() {
+  const word = prompt('พิมพ์คำว่า "ลบทั้งหมด" เพื่อยืนยันการลบนักเรียนทุกคน');
+  if (word !== 'ลบทั้งหมด') return;
+  const r = await api('deleteAllStudents', []);
+  alert('ลบแล้ว ' + r.deleted + ' รายการ');
+}
+
+async function loadUnrecorded(activity, grade) {
+  const r = await api('getUnrecordedStudents', [activity, null, grade || '']); // null = วันนี้
+  // r.students = [{code, name, grade, no}] -> render เป็น checkbox + dropdown สถานะต่อคน
+}
+async function submitManual(activity, items, recorderName) {
+  // items = [{code:'10001', status:'ลา', note:'ป่วย'}, {code:'10002', status:'ขาดเรียน'}]
+  const r = await api('recordManualStatus', [items, activity, null, recorderName]);
+  alert('บันทึก ' + r.added + ' คน, ข้าม ' + r.skipped + ' (ซ้ำ)');
+}
+  
 </script>
 </body>
 </html>
