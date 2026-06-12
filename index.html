@@ -608,37 +608,91 @@ function runLookup(){
 
 /* ============ STUDENTS ============ */
 let studentsCache=[];
+let studentSelected = new Set(); // เก็บเลขแถวที่ติ๊กเลือกไว้ (คงค่าข้ามหน้า DataTables)
 function renderStudents(){
   document.getElementById('content').innerHTML =
   '<div class="card"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">'
   + '<span><i class="bi bi-people-fill"></i> ข้อมูลนักเรียน</span>'
-  + '<div class="d-flex gap-2">'
+  + '<div class="d-flex gap-2 flex-wrap">'
   + '<button class="btn btn-success btn-sm" onclick="studentModal()"><i class="bi bi-plus-lg"></i> เพิ่มนักเรียน</button>'
   + '<label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> นำเข้า Excel/CSV'
   + '<input type="file" hidden accept=".xlsx,.xls,.csv" onchange="importExcel(event)"></label>'
   + '<button class="btn btn-outline-secondary btn-sm" onclick="downloadTemplate()"><i class="bi bi-download"></i> เทมเพลต</button>'
   + '</div></div>'
+  // แถบเครื่องมือลบ
+  + '<div class="card-body border-bottom py-2"><div class="d-flex flex-wrap align-items-center gap-2">'
+  + '<span class="fw-bold text-danger me-1"><i class="bi bi-trash"></i> ลบข้อมูล:</span>'
+  + '<button class="btn btn-danger btn-sm" onclick="askDeleteSelected()"><i class="bi bi-check2-square"></i> ลบที่เลือก (<span id="selCount">0</span>)</button>'
+  + '<select id="delGrade" class="form-select form-select-sm" style="max-width:170px;"><option value="">-- เลือกชั้น --</option></select>'
+  + '<button class="btn btn-danger btn-sm" onclick="askDeleteGrade()"><i class="bi bi-people"></i> ลบทั้งห้อง</button>'
+  + '<button class="btn btn-danger btn-sm ms-auto" onclick="askDeleteAll()"><i class="bi bi-exclamation-octagon"></i> ลบทั้งหมด</button>'
+  + '</div></div>'
   + '<div class="card-body table-responsive"><table id="studentTable" class="table table-hover" style="width:100%">'
-  + '<thead><tr><th>รูป</th><th>รหัสนักเรียน</th><th>เลขที่</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>จัดการ</th></tr></thead>'
+  + '<thead><tr><th><input type="checkbox" id="checkAllStudents" onclick="toggleAllStudents(this)"></th>'
+  + '<th>รูป</th><th>รหัสนักเรียน</th><th>เลขที่</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>จัดการ</th></tr></thead>'
   + '<tbody></tbody></table></div></div>';
   loadStudents();
 }
 function loadStudents(){
   showLoader(true);
+  studentSelected = new Set();
   api('getStudents').then(function(list){
     studentsCache=list;
+    // เติมตัวเลือกชั้นสำหรับ "ลบทั้งห้อง"
+    const grades=[...new Set(list.map(function(s){return s.grade;}).filter(Boolean))].sort();
+    const dg=document.getElementById('delGrade');
+    if(dg) dg.innerHTML='<option value="">-- เลือกชั้น --</option>'
+      + grades.map(function(g){return '<option>'+esc(g)+'</option>';}).join('');
+
     if($.fn.dataTable.isDataTable('#studentTable')) $('#studentTable').DataTable().destroy();
     const tbody = list.map(function(s){
       const img = s.photo? '<img src="'+esc(s.photo)+'" class="student-photo">' : '<div class="student-photo d-flex align-items-center justify-content-center"><i class="bi bi-person"></i></div>';
-      return '<tr><td>'+img+'</td><td>'+esc(s.code)+'</td><td>'+esc(s.no)+'</td>'
+      return '<tr><td><input type="checkbox" class="rowCheck" value="'+s.row+'" onclick="onRowCheck(this)"></td>'
+        +'<td>'+img+'</td><td>'+esc(s.code)+'</td><td>'+esc(s.no)+'</td>'
         +'<td>'+esc((s.prefix||'')+s.name)+'</td><td>'+esc(s.grade)+'</td>'
         +'<td><button class="btn btn-sm btn-warning" onclick="editStudent('+s.row+')"><i class="bi bi-pencil"></i></button> '
         +'<button class="btn btn-sm btn-danger" onclick="delStudent('+s.row+',\''+esc(s.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
     }).join('');
     $('#studentTable tbody').html(tbody);
-    $('#studentTable').DataTable({language:thaiDT(),order:[[1,'asc']],pageLength:25});
+    const dt = $('#studentTable').DataTable({language:thaiDT(),order:[[2,'asc']],pageLength:25,
+      columnDefs:[{orderable:false,targets:[0,1,6]}]});
+    dt.on('draw', restoreChecks); // เปลี่ยนหน้า/ค้นหาแล้วคืนสถานะติ๊กที่เลือกไว้
+    updateSelCount();
     showLoader(false);
   });
+}
+
+/* ---------- ตัวช่วยจัดการ checkbox เลือกหลายคน ---------- */
+function onRowCheck(cb){
+  const row=Number(cb.value);
+  cb.checked ? studentSelected.add(row) : studentSelected.delete(row);
+  updateSelCount(); syncHeaderCheck();
+}
+function toggleAllStudents(master){
+  document.querySelectorAll('#studentTable tbody .rowCheck').forEach(function(cb){
+    cb.checked=master.checked;
+    const row=Number(cb.value);
+    master.checked ? studentSelected.add(row) : studentSelected.delete(row);
+  });
+  updateSelCount();
+}
+function restoreChecks(){
+  document.querySelectorAll('#studentTable tbody .rowCheck').forEach(function(cb){
+    cb.checked=studentSelected.has(Number(cb.value));
+  });
+  syncHeaderCheck();
+}
+function syncHeaderCheck(){
+  const boxes=document.querySelectorAll('#studentTable tbody .rowCheck');
+  const master=document.getElementById('checkAllStudents');
+  if(!master) return;
+  const checked=[...boxes].filter(function(b){return b.checked;}).length;
+  master.checked = boxes.length>0 && checked===boxes.length;
+  master.indeterminate = checked>0 && checked<boxes.length;
+}
+function updateSelCount(){
+  const el=document.getElementById('selCount');
+  if(el) el.innerText=studentSelected.size;
 }
 let pendingPhoto = null; // เก็บรูปที่ย่อแล้ว รออัปโหลดตอนกดบันทึก
 
@@ -727,11 +781,63 @@ function pickStudentPhoto(e){
   reader.readAsDataURL(file);
 }
 function editStudent(row){ studentModal(studentsCache.find(function(s){return s.row===row;})); }
+// 1) ลบรายบุคคล
 function delStudent(row,name){
-  Swal.fire({title:'ลบนักเรียน?',text:name,icon:'warning',showCancelButton:true,
-    confirmButtonText:'ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  Swal.fire({title:'ลบนักเรียน?',
+    html:'ต้องการลบ <b>'+esc(name)+'</b> ใช่หรือไม่<br><small class="text-muted">การลบไม่สามารถย้อนกลับได้</small>',
+    icon:'warning',showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-trash"></i> ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
   .then(function(r){ if(r.isConfirmed){ showLoader(true);
-    api('deleteStudent',row).then(function(){showLoader(false);toast('success','ลบแล้ว');loadStudents();}); }});
+    api('deleteStudent',row).then(function(){showLoader(false);toast('success','ลบแล้ว');loadStudents();})
+      .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
+}
+
+// 2) ลบหลายคนที่เลือก
+function askDeleteSelected(){
+  const rows=[...studentSelected];
+  if(!rows.length){ toast('warning','ยังไม่ได้เลือกนักเรียน'); return; }
+  Swal.fire({title:'ลบนักเรียนที่เลือก?',
+    html:'ต้องการลบนักเรียนที่เลือกจำนวน <b>'+rows.length+'</b> คน ใช่หรือไม่<br><small class="text-muted">การลบไม่สามารถย้อนกลับได้</small>',
+    icon:'warning',showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-trash"></i> ลบ '+rows.length+' คน',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('deleteStudents',rows).then(function(res){showLoader(false);
+      toast('success','ลบแล้ว '+(res.deleted||rows.length)+' คน'); loadStudents();})
+      .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
+}
+
+// 3) ลบทั้งห้องเรียน
+function askDeleteGrade(){
+  const grade=document.getElementById('delGrade').value;
+  if(!grade){ toast('warning','กรุณาเลือกชั้นก่อน'); return; }
+  const count=studentsCache.filter(function(s){return s.grade===grade;}).length;
+  Swal.fire({title:'ลบทั้งห้อง?',
+    html:'ต้องการลบนักเรียนชั้น <b>'+esc(grade)+'</b> ทั้งหมด <b>'+count+'</b> คน ใช่หรือไม่<br><small class="text-muted">การลบไม่สามารถย้อนกลับได้</small>',
+    icon:'warning',showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-trash"></i> ลบทั้งห้อง',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('deleteStudentsByGrade',grade).then(function(res){showLoader(false);
+      toast('success','ลบแล้ว '+(res.deleted||count)+' คน'); loadStudents();})
+      .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
+}
+
+// 4) ลบทั้งหมด (ต้องพิมพ์ยืนยัน)
+function askDeleteAll(){
+  const total=studentsCache.length;
+  if(!total){ toast('warning','ไม่มีข้อมูลให้ลบ'); return; }
+  Swal.fire({title:'⚠️ ลบข้อมูลนักเรียนทั้งหมด',
+    html:'กำลังจะลบนักเรียน <b>ทั้งหมด '+total+' คน</b><br><span class="text-danger">การกระทำนี้ไม่สามารถย้อนกลับได้</span><br><br>พิมพ์คำว่า <b>ลบทั้งหมด</b> เพื่อยืนยัน',
+    icon:'warning',input:'text',inputPlaceholder:'พิมพ์: ลบทั้งหมด',
+    showCancelButton:true,confirmButtonText:'<i class="bi bi-trash"></i> ลบทั้งหมด',
+    cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626',
+    preConfirm:function(v){
+      if(String(v).trim()!=='ลบทั้งหมด'){ Swal.showValidationMessage('กรุณาพิมพ์คำว่า "ลบทั้งหมด" ให้ถูกต้อง'); return false; }
+      return true;
+    }})
+  .then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('deleteAllStudents').then(function(res){showLoader(false);
+      toast('success','ลบนักเรียนทั้งหมดแล้ว ('+(res.deleted||total)+' คน)'); loadStudents();})
+      .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
 }
 function importExcel(e){
   const file=e.target.files[0]; if(!file)return;
