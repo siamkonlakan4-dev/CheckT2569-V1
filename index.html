@@ -1144,6 +1144,20 @@ function thaiDT(){
   if(u){ currentUser = u; startApp(); }
 })();
 setInterval(function(){ if(document.getElementById('liveTable')) refreshLive(false); },15000);
+
+
+<div id="confirmModal" class="cm-overlay" style="display:none">
+  <div class="cm-box">
+    <div class="cm-icon">⚠️</div>
+    <h3 id="cmTitle">ยืนยันการลบ</h3>
+    <p id="cmMsg"></p>
+    <input id="cmInput" type="text" placeholder="" style="display:none">
+    <div class="cm-actions">
+      <button id="cmCancel" class="cm-btn cm-cancel">ยกเลิก</button>
+      <button id="cmOk" class="cm-btn cm-danger">ลบ</button>
+    </div>
+  </div>
+</div>
 </script>
 </body>
 </html>
