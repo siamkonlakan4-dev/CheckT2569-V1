@@ -1197,6 +1197,29 @@ async function submitManual(activity, items, recorderName) {
   const r = await api('recordManualStatus', [items, activity, null, recorderName]);
   alert('บันทึก ' + r.added + ' คน, ข้าม ' + r.skipped + ' (ซ้ำ)');
 }
+
+async function deleteSelectedStudents(rows) {
+  if (!rows || !rows.length) { alert('ยังไม่ได้เลือกนักเรียน'); return; }
+  if (!confirm('ยืนยันการลบนักเรียนที่เลือก ' + rows.length + ' คน?\nการลบไม่สามารถกู้คืนได้')) return;
+  const r = await api('deleteStudents', [rows]);
+  alert('ลบแล้ว ' + r.deleted + ' รายการ');
+}
+async function deleteWholeGrade(grade, count) {
+  const msg = 'ยืนยันการลบนักเรียนทั้งห้อง "' + grade + '"'
+    + (count != null ? ' จำนวน ' + count + ' คน' : '') + '?\nการลบไม่สามารถกู้คืนได้';
+  if (!confirm(msg)) return;
+  const r = await api('deleteStudentsByGrade', [grade]);
+  alert('ลบห้อง ' + grade + ' แล้ว ' + r.deleted + ' รายการ');
+}
+async function deleteEveryStudent() {
+  const word = prompt('คำเตือน: นี่คือการลบนักเรียนทั้งหมดและกู้คืนไม่ได้\n\nพิมพ์คำว่า  ลบทั้งหมด  เพื่อยืนยัน');
+  if (word == null) return;
+  if (word.trim() !== 'ลบทั้งหมด') { alert('คำยืนยันไม่ถูกต้อง ยกเลิกการลบ'); return; }
+  const r = await api('deleteAllStudents', []);
+  alert('ลบนักเรียนทั้งหมดแล้ว ' + r.deleted + ' รายการ');
+}
+
+
   
 </script>
 </body>
