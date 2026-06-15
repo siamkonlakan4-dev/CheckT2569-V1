@@ -595,7 +595,7 @@ qrScanner.start(
 )
 .catch(function(){
   return qrScanner.start(
-    { facingMode: "user" },
+    { facingMode: "environment" }, // 🔥 เปลี่ยนตรงนี้ด้วย (ไม่ใช้ user แล้ว)
     config,
     onScan,
     function(){}
