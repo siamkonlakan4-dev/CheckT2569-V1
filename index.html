@@ -635,9 +635,16 @@ function onScan(text){
   lastScan={code:text,t:now};
   submitCheckin(text);
 }
+let lastRequestTime = 0;
+
 function doManual(){
-  const v=document.getElementById('manualCode').value.trim();
+  const now = Date.now();
+  if(now - lastRequestTime < 1500) return;
+  lastRequestTime = now;
+
+  const v = document.getElementById('manualCode').value.trim();
   if(!v){toast('warning','กรอกรหัสนักเรียน');return;}
+
   submitCheckin(v);
   document.getElementById('manualCode').value='';
   document.getElementById('manualCode').focus();
@@ -656,12 +663,33 @@ function successPopup(student){
     timerProgressBar: true
   });
 }
+  let lastRequest = 0;
 function submitCheckin(code){
-  api('checkIn',String(code).trim(),currentUser.name,currentCheckinActivity).then(function(res){
-    if(res.ok){ beep(true); successPopup(res.student); prependLiveRow(res); }
-    else if(res.type==='duplicate'){ beep(false); toast('info','⚠️ '+res.message); }
-    else{ beep(false); toast('error','❌ '+res.message); }
-  }).catch(function(e){beep(false);toast('error',e.message);});
+
+  const now = Date.now();
+  if(now - lastRequest < 1500) return; // กันยิงซ้ำ
+  lastRequest = now;
+
+  api('checkIn',String(code).trim(),currentUser.name,currentCheckinActivity)
+  .then(function(res){
+    if(res.ok){
+      beep(true);
+      successPopup(res.student);
+      prependLiveRow(res);
+    }
+    else if(res.type==='duplicate'){
+      beep(false);
+      toast('info','⚠️ '+res.message);
+    }
+    else{
+      beep(false);
+      toast('error','❌ '+res.message);
+    }
+  })
+  .catch(function(e){
+    beep(false);
+    toast('error',e.message);
+  });
 }
 function prependLiveRow(res){
   const tb=document.getElementById('liveTable'); if(!tb) return;
@@ -1423,6 +1451,22 @@ function thaiDT(){
   if(u){ currentUser = u; startApp(); }
 })();
 setInterval(function(){ if(document.getElementById('liveTable')) refreshLive(false); },15000);
+
+let typingTimer;
+
+document.addEventListener('input', function(e){
+  if(e.target.id !== 'manualCode') return;
+
+  clearTimeout(typingTimer);
+
+  typingTimer = setTimeout(function(){
+    const v = e.target.value.trim();
+    if(v.length >= 4){
+      submitCheckin(v);
+      e.target.value='';
+    }
+  }, 500);
+});
 </script>
 </body>
 </html>
