@@ -575,55 +575,34 @@ function startScanner(){
   }
   document.getElementById('btnStart').disabled=true;
   document.getElementById('btnStop').disabled=false;
-  qrScanner = new Html5Qrcode('reader');
-
-const config = {
-  fps: 18,
-  qrbox: { width: 200, height: 200 },
-  rememberLastUsedCamera: true,
-  videoConstraints: {
-    width: { ideal: 1280 },
-    height: { ideal: 720 }
-  }
-};function startScanner(){
-  if(location.protocol!=='https:' && location.hostname!=='localhost'){
-    Swal.fire('ใช้กล้องไม่ได้','ต้องใช้ HTTPS เท่านั้น','warning');
-    return;
-  }
-
-  document.getElementById('btnStart').disabled=true;
-  document.getElementById('btnStop').disabled=false;
 
   qrScanner = new Html5Qrcode('reader');
 
   const config = {
     fps: 18,
-    qrbox: { width: 200, height: 200 },
-    videoConstraints: {
-      width: { ideal: 1280 },
-      height: { ideal: 720 }
-    }
+    qrbox: { width: 220, height: 220 },
+    aspectRatio: 1.0
   };
 
-  Html5Qrcode.getCameras().then(devices => {
-
-    if (!devices || devices.length === 0) {
-      throw new Error("No camera found");
+  // เลือก "กล้องหลัง" จากรายการกล้องจริงด้วย deviceId (แม่นกว่า facingMode บนมือถือ)
+  Html5Qrcode.getCameras().then(function(devices){
+    if(!devices || devices.length === 0){
+      throw { name: 'NotFoundError' };
     }
 
-    // 🔥 เลือกกล้องหลังจริง
-    let backCamera = devices.find(d =>
-      d.label.toLowerCase().includes('back') ||
-      d.label.toLowerCase().includes('rear')
-    );
+    // หากล้องหลังจากชื่อ (back / rear / environment / หลัง)
+    var back = devices.find(function(d){
+      var label = (d.label || '').toLowerCase();
+      return label.indexOf('back') !== -1
+          || label.indexOf('rear') !== -1
+          || label.indexOf('environment') !== -1
+          || label.indexOf('หลัง') !== -1;
+    });
 
-    let cameraId = backCamera ? backCamera.id : devices[0].id;
+    // ถ้าหาไม่เจอ ใช้กล้องตัวสุดท้าย (ส่วนใหญ่คือกล้องหลังบนมือถือ)
+    var cameraId = back ? back.id : devices[devices.length - 1].id;
 
-    return qrScanner.start(
-      cameraId,   // 🔥 ใช้ deviceId แทน facingMode
-      config,
-      onScan
-    );
+    return qrScanner.start(cameraId, config, onScan, function(){});
   })
   .catch(function(err){
     handleCamError(err);
