@@ -370,7 +370,7 @@ function loadDashboard(){
     c.innerHTML =
     '<div class="row g-3 mb-4">'
     + statCard('bg-total','people-fill','นักเรียนทั้งหมด',d.total)
-    + statCard('bg-present','check-circle-fill','มาเรียนวันนี้',d.present)
+    + statCard('bg-present','check-circle-fill','ปกติวันนี้',d.present)
     + statCard('bg-late','clock-fill','มาสาย',d.late)
     + statCard('bg-absent','x-circle-fill','ขาด/ยังไม่มา',d.absent)
     + '</div>'
@@ -385,11 +385,11 @@ function loadDashboard(){
     + '</tbody></table></div></div></div></div>';
 
     new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:d.trend.labels,
-      datasets:[{label:'มาเรียน',data:d.trend.present,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.1)',tension:.3,fill:true},
+      datasets:[{label:'ปกติ',data:d.trend.present,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.1)',tension:.3,fill:true},
         {label:'มาสาย',data:d.trend.late,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',tension:.3,fill:true}]},
       options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
     new Chart(document.getElementById('pieChart'),{type:'doughnut',
-      data:{labels:['มาเรียน','มาสาย','ขาด/ยังไม่มา'],
+      data:{labels:['ปกติ','มาสาย','ขาด/ยังไม่มา'],
         datasets:[{data:[d.present,d.late,d.absent],backgroundColor:['#16a34a','#f59e0b','#ef4444']}]},
       options:{plugins:{legend:{position:'bottom'}}}});
   }).catch(function(e){ c.innerHTML='<div class="alert alert-danger">โหลดข้อมูลไม่ได้: '+esc(e.message)+'</div>'; });
@@ -576,10 +576,34 @@ function startScanner(){
   document.getElementById('btnStart').disabled=true;
   document.getElementById('btnStop').disabled=false;
   qrScanner = new Html5Qrcode('reader');
-  const config = {fps:10, qrbox:{width:250,height:250}};
-  qrScanner.start({facingMode:'environment'}, config, onScan, function(){})
-    .catch(function(){ return qrScanner.start({facingMode:'user'}, config, onScan, function(){}); })
-    .catch(function(err){ handleCamError(err); });
+
+const config = {
+  fps: 18,
+  qrbox: { width: 200, height: 200 },
+  rememberLastUsedCamera: true,
+  videoConstraints: {
+    width: { ideal: 1280 },
+    height: { ideal: 720 }
+  }
+};
+
+qrScanner.start(
+  { facingMode: "environment" },
+  config,
+  onScan,
+  function(){}
+)
+.catch(function(){
+  return qrScanner.start(
+    { facingMode: "user" },
+    config,
+    onScan,
+    function(){}
+  );
+})
+.catch(function(err){
+  handleCamError(err);
+});
 }
 function stopScanner(){
   if(qrScanner){
@@ -618,9 +642,23 @@ function doManual(){
   document.getElementById('manualCode').value='';
   document.getElementById('manualCode').focus();
 }
+function successPopup(student){
+  Swal.fire({
+    icon: 'success',
+    title: 'บันทึกข้อมูลเรียบร้อย',
+    html:
+      'รหัสนักเรียน: <b>'+student.code+'</b><br>'+
+      'ชื่อ-สกุล: <b>'+student.name+'</b><br>'+
+      'ชั้น: <b>'+student.grade+'</b>',
+    position: 'center',
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true
+  });
+}
 function submitCheckin(code){
   api('checkIn',String(code).trim(),currentUser.name,currentCheckinActivity).then(function(res){
-    if(res.ok){ beep(true); toast('success','✅ '+res.student.name+' ('+res.status+')'); prependLiveRow(res); }
+    if(res.ok){ beep(true); successPopup(res.student); prependLiveRow(res); }
     else if(res.type==='duplicate'){ beep(false); toast('info','⚠️ '+res.message); }
     else{ beep(false); toast('error','❌ '+res.message); }
   }).catch(function(e){beep(false);toast('error',e.message);});
@@ -628,7 +666,7 @@ function submitCheckin(code){
 function prependLiveRow(res){
   const tb=document.getElementById('liveTable'); if(!tb) return;
   const empty=tb.querySelector('td[colspan]'); if(empty) tb.innerHTML='';
-  const badge = res.status==='มาเรียน'?'badge-present':'badge-late';
+  const badge = res.status==='ปกติ'?'badge-present':'badge-late';
   const tr=document.createElement('tr'); tr.className='scan-result-row';
   tr.innerHTML='<td>'+fmtThaiTime(res.time)+'</td><td>'+esc(res.student.code)+'</td>'
     +'<td>'+esc(res.student.name)+'</td><td>'+esc(res.student.grade)+'</td>'
@@ -643,7 +681,7 @@ function refreshLive(flash){
     const tb=document.getElementById('liveTable');
     if(!tb)return;
     tb.innerHTML = rows.map(function(r,i){
-      const badge = r.status==='มาเรียน'?'badge-present':'badge-late';
+      const badge = r.status==='ปกติ'?'badge-present':'badge-late';
       return '<tr class="'+(flash&&i===0?'scan-result-row':'')+'"><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.code)+'</td>'
         +'<td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td>'
         +'<td><span class="badge '+badge+'">'+r.status+'</span></td></tr>';
@@ -716,7 +754,7 @@ function runLookup(){
     const periodLabel = period==='today'?'วันนี้':(period==='month'?'เดือน '+month:'ภาคเรียน '+res.term+'/'+res.year);
     const rows = res.rows.length
       ? res.rows.map(function(r){
-          const badge=r.status==='มาเรียน'?'badge-present':(r.status==='มาสาย'?'badge-late':'badge-absent');
+          const badge=r.status==='ปกติ'?'badge-present':(r.status==='มาสาย'?'badge-late':'badge-absent');
           return '<tr><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.activity)+'</td><td><span class="badge '+badge+'">'+esc(r.status)+'</span></td></tr>';
         }).join('')
       : '<tr><td colspan="4" class="text-center text-muted py-3">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>';
@@ -727,7 +765,7 @@ function runLookup(){
        +'<div class="text-muted">รหัส '+esc(s.code)+' · ชั้น '+esc(s.grade)+'</div></div>'
      +'</div></div>'
      +'<div class="row g-2 mb-3 text-center">'
-       +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">มาเรียน</div><h4 class="text-success mb-0">'+res.present+'</h4></div></div></div>'
+       +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">ปกติ</div><h4 class="text-success mb-0">'+res.present+'</h4></div></div></div>'
        +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">มาสาย</div><h4 class="text-warning mb-0">'+res.late+'</h4></div></div></div>'
        +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">รวมบันทึก</div><h4 class="mb-0">'+res.total+'</h4></div></div></div>'
      +'</div>'
@@ -1171,13 +1209,13 @@ function runReport(){
   api('getReport',f).then(function(rows){
     showLoader(false);
     reportData=rows;
-    const present=rows.filter(function(r){return r.status==='มาเรียน';}).length;
+    const present=rows.filter(function(r){return r.status==='ปกติ';}).length;
     const late=rows.filter(function(r){return r.status==='มาสาย';}).length;
     document.getElementById('reportSummary').innerHTML =
-      sumBox('primary','รวมทั้งหมด',rows.length)+sumBox('success','มาเรียน',present)+sumBox('warning','มาสาย',late);
+      sumBox('primary','รวมทั้งหมด',rows.length)+sumBox('success','ปกติ',present)+sumBox('warning','มาสาย',late);
     if($.fn.dataTable.isDataTable('#reportTable')) $('#reportTable').DataTable().destroy();
     $('#reportTable tbody').html(rows.map(function(r){
-      const b=r.status==='มาเรียน'?'badge-present':'badge-late';
+      const b=r.status==='ปกติ'?'badge-present':'badge-late';
       return '<tr><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.activity)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td>'
         +'<td>'+esc(r.grade)+'</td><td><span class="badge '+b+'">'+r.status+'</span></td><td>'+esc(r.recorder)+'</td></tr>';
     }).join(''));
@@ -1193,7 +1231,7 @@ function exportReportExcel(){
 }
 function exportReportPDF(){
   if(!reportData.length){toast('warning','ไม่มีข้อมูล');return;}
-  const present=reportData.filter(function(r){return r.status==='มาเรียน';}).length;
+  const present=reportData.filter(function(r){return r.status==='ปกติ';}).length;
   const late=reportData.filter(function(r){return r.status==='มาสาย';}).length;
   const rows=reportData.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.activity)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td><td>'+r.status+'</td></tr>';}).join('');
   const w=window.open('','_blank');
@@ -1205,7 +1243,7 @@ function exportReportPDF(){
     +'th{background:#1e3a8a;color:#fff;}.summary{text-align:center;margin:10px;}</style></head><body>'
     +'<img class="logo" src="'+LOGO+'" onerror="this.style.display=\'none\'">'
     +'<h3>โรงเรียนสยามกลการ 4 | สพป.มุกดาหาร</h3><h4>รายงานการเช็กชื่อ</h4>'
-    +'<div class="summary">รวม '+reportData.length+' รายการ | มาเรียน '+present+' | มาสาย '+late+'</div>'
+    +'<div class="summary">รวม '+reportData.length+' รายการ | ปกติ '+present+' | มาสาย '+late+'</div>'
     +'<table><thead><tr><th>#</th><th>วันที่</th><th>เวลา</th><th>กิจกรรม</th><th>รหัสนักเรียน</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table>'
     +'<p style="margin-top:30px;text-align:right;">ผู้พิมพ์รายงาน: '+esc(currentUser.name)+'</p>'
     +'<scr'+'ipt>window.onload=function(){setTimeout(function(){window.print();},400);};</scr'+'ipt>'
