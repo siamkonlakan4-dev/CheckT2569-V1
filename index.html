@@ -585,25 +585,49 @@ const config = {
     width: { ideal: 1280 },
     height: { ideal: 720 }
   }
-};
+};function startScanner(){
+  if(location.protocol!=='https:' && location.hostname!=='localhost'){
+    Swal.fire('ใช้กล้องไม่ได้','ต้องใช้ HTTPS เท่านั้น','warning');
+    return;
+  }
 
-qrScanner.start(
-  { facingMode: "environment" },
-  config,
-  onScan,
-  function(){}
-)
-.catch(function(){
-  return qrScanner.start(
-    { facingMode: "environment" }, // 🔥 เปลี่ยนตรงนี้ด้วย (ไม่ใช้ user แล้ว)
-    config,
-    onScan,
-    function(){}
-  );
-})
-.catch(function(err){
-  handleCamError(err);
-});
+  document.getElementById('btnStart').disabled=true;
+  document.getElementById('btnStop').disabled=false;
+
+  qrScanner = new Html5Qrcode('reader');
+
+  const config = {
+    fps: 18,
+    qrbox: { width: 200, height: 200 },
+    videoConstraints: {
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    }
+  };
+
+  Html5Qrcode.getCameras().then(devices => {
+
+    if (!devices || devices.length === 0) {
+      throw new Error("No camera found");
+    }
+
+    // 🔥 เลือกกล้องหลังจริง
+    let backCamera = devices.find(d =>
+      d.label.toLowerCase().includes('back') ||
+      d.label.toLowerCase().includes('rear')
+    );
+
+    let cameraId = backCamera ? backCamera.id : devices[0].id;
+
+    return qrScanner.start(
+      cameraId,   // 🔥 ใช้ deviceId แทน facingMode
+      config,
+      onScan
+    );
+  })
+  .catch(function(err){
+    handleCamError(err);
+  });
 }
 function stopScanner(){
   if(qrScanner){
