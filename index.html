@@ -877,44 +877,23 @@ function searchStudentCard(){
   if(!q) return toast('warning','กรอกคำค้นหา');
 
   api('getStudents').then(list=>{
-  const res = list.find(s =>
-    s.code === q || (s.name||'').includes(q)
-  );
-  ...
-});.then(res=>{
+    const res = list.find(s =>
+      s.code === q || (s.name||'').includes(q)
+    );
+
+    if(!res){
+      document.getElementById('studentResult').innerHTML =
+        '<div class="alert alert-danger">ไม่พบนักเรียน</div>';
+      return;
+    }
+
     selectedStudent = res;
+
     document.getElementById('studentResult').innerHTML = `
       <div class="alert alert-info">
         <b>${res.name}</b> (${res.code}) - ชั้น ${res.grade}
       </div>`;
   }).catch(e=>toast('error', e.message));
-}
-
-  function submitCardRequest(){
-  if(!selectedStudent){
-    toast('warning','ยังไม่ได้เลือกนักเรียน');
-    return;
-  }
-
-  const items = [];
-  if(document.getElementById('r1').checked) items.push({type:'card', price:10});
-  if(document.getElementById('r2').checked) items.push({type:'lanyard', price:30});
-  if(document.getElementById('r3').checked) items.push({type:'cover', price:10});
-
-  if(items.length === 0){
-    toast('warning','เลือกอย่างน้อย 1 รายการ');
-    return;
-  }
-
-  api('createCardRequest', {
-    student: selectedStudent,
-    items: items,
-    requester: currentUser.name
-  }).then(()=>{
-    toast('success','ส่งคำร้องแล้ว');
-    selectedStudent = null;
-    renderCardRequest();
-  });
 }
 
 
