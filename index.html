@@ -335,11 +335,19 @@ function navigate(page){
   });
   document.getElementById('pageTitle').innerText = MENU[page].title;
   document.getElementById('sidebar').classList.remove('show');
-  ({dashboard:renderDashboard, checkin:renderCheckin, manual:renderManual,
-  studentlist:renderStudentList, students:renderStudents, cards:renderCards,
-  reports:renderReports, activities:renderActivities, users:renderUsers,
-  settings:renderSettings})[page]();
-  cardrequest:renderCardRequest})[page]();
+  ({
+  dashboard: renderDashboard,
+  checkin: renderCheckin,
+  manual: renderManual,
+  studentlist: renderStudentList,
+  students: renderStudents,
+  cards: renderCards,
+  activities: renderActivities,
+  reports: renderReports,
+  users: renderUsers,
+  settings: renderSettings,
+  cardrequest: renderCardRequest
+})[page]();
 }
 
 /* ============ DASHBOARD ============ */
