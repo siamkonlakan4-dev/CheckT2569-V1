@@ -876,7 +876,12 @@ function searchStudentCard(){
   const q = document.getElementById('searchStudent').value.trim();
   if(!q) return toast('warning','กรอกคำค้นหา');
 
-  api('searchStudent', q).then(res=>{
+  api('getStudents').then(list=>{
+  const res = list.find(s =>
+    s.code === q || (s.name||'').includes(q)
+  );
+  ...
+});.then(res=>{
     selectedStudent = res;
     document.getElementById('studentResult').innerHTML = `
       <div class="alert alert-info">
