@@ -324,7 +324,6 @@ function startApp(){
   const first = currentUser.role==='teacher' ? 'checkin' : 'dashboard';
   navigate(first);
 }
-
   ({
   dashboard: renderDashboard,
   checkin: renderCheckin,
@@ -338,8 +337,10 @@ function startApp(){
   settings: renderSettings,
   cardrequest: renderCardRequest,
   cardadmin: renderCardAdmin
-})[page]();
+  })[page]();
+}
 
+  
 /* ============ DASHBOARD ============ */
 function renderDashboard(){
   const c = document.getElementById('content');
