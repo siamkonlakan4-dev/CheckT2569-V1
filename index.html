@@ -322,7 +322,6 @@ function startApp(){
   api('getSettings').then(function(s){ settings = s; });
 
   const first = currentUser.role==='teacher' ? 'checkin' : 'dashboard';
-    const first = currentUser.role==='teacher' ? 'checkin' : 'dashboard';
   navigate(first);
 }
 
