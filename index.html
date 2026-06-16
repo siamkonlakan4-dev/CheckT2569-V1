@@ -322,8 +322,17 @@ function startApp(){
   api('getSettings').then(function(s){ settings = s; });
 
   const first = currentUser.role==='teacher' ? 'checkin' : 'dashboard';
+    const first = currentUser.role==='teacher' ? 'checkin' : 'dashboard';
   navigate(first);
 }
+
+function navigate(page){
+  stopScanner();
+  document.querySelectorAll('.nav-link-side').forEach(function(el){
+    el.classList.toggle('active', el.dataset.page===page);
+  });
+  document.getElementById('pageTitle').innerText = MENU[page].title;
+  document.getElementById('sidebar').classList.remove('show');
   ({
   dashboard: renderDashboard,
   checkin: renderCheckin,
