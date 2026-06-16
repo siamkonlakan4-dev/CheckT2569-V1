@@ -218,9 +218,9 @@ const MENU = {
   icon:'card-heading',
   title:'คำร้องขอบัตรใหม่',
   roles:['teacher','admin']
+  },
   cardadmin:{icon:'card-checklist', title:'จัดการคำร้องบัตร', roles:['admin']},
 },
-};
 
 /* ====== จัดรูปแบบวันที่/เวลาแบบไทย ====== */
 const THMONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -347,8 +347,9 @@ function navigate(page){
   reports: renderReports,
   users: renderUsers,
   settings: renderSettings,
-  cardrequest: renderCardRequest})[page]();
-  cardadmin: renderCardAdmin,
+  cardrequest: renderCardRequest,
+  cardadmin: renderCardAdmin
+  })[page]();
 }
 
 /* ============ DASHBOARD ============ */
