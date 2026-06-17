@@ -1037,13 +1037,13 @@ function loadStudents(){
       + grades.map(function(g){return '<option>'+esc(g)+'</option>';}).join('');
 
     if($.fn.dataTable.isDataTable('#studentTable')) $('#studentTable').DataTable().destroy();
-    const tbody = list.map(function(s){
+      const tbody = list.map(function(s){
       const img = s.photo? '<img src="'+esc(s.photo)+'" class="student-photo">' : '<div class="student-photo d-flex align-items-center justify-content-center"><i class="bi bi-person"></i></div>';
-      return '<tr><td><input type="checkbox" class="rowCheck" value="'+s.row+'" onclick="onRowCheck(this)"></td>'
+      return '<tr><td><input type="checkbox" class="rowCheck" value="'+esc(s.row)+'" onclick="onRowCheck(this)"></td>'
         +'<td>'+img+'</td><td>'+esc(s.code)+'</td><td>'+esc(s.no)+'</td>'
         +'<td>'+esc((s.prefix||'')+s.name)+'</td><td>'+esc(s.grade)+'</td>'
-        +'<td><button class="btn btn-sm btn-warning" onclick="editStudent('+s.row+')"><i class="bi bi-pencil"></i></button> '
-        +'<button class="btn btn-sm btn-danger" onclick="delStudent('+s.row+',\''+esc(s.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+        +'<td><button class="btn btn-sm btn-warning" onclick="editStudent(\''+esc(s.row)+'\')"><i class="bi bi-pencil"></i></button> '
+        +'<button class="btn btn-sm btn-danger" onclick="delStudent(\''+esc(s.row)+'\',\''+esc(s.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
     }).join('');
     $('#studentTable tbody').html(tbody);
     const dt = $('#studentTable').DataTable({language:thaiDT(),order:[[2,'asc']],pageLength:25,
@@ -1056,21 +1056,21 @@ function loadStudents(){
 
 /* ---------- ตัวช่วยจัดการ checkbox เลือกหลายคน ---------- */
 function onRowCheck(cb){
-  const row=Number(cb.value);
+  const row=cb.value;
   cb.checked ? studentSelected.add(row) : studentSelected.delete(row);
   updateSelCount(); syncHeaderCheck();
 }
 function toggleAllStudents(master){
   document.querySelectorAll('#studentTable tbody .rowCheck').forEach(function(cb){
     cb.checked=master.checked;
-    const row=Number(cb.value);
+    const row=cb.value;
     master.checked ? studentSelected.add(row) : studentSelected.delete(row);
   });
   updateSelCount();
 }
 function restoreChecks(){
   document.querySelectorAll('#studentTable tbody .rowCheck').forEach(function(cb){
-    cb.checked=studentSelected.has(Number(cb.value));
+    cb.checked=studentSelected.has(cb.value);
   });
   syncHeaderCheck();
 }
@@ -1172,7 +1172,7 @@ function pickStudentPhoto(e){
   };
   reader.readAsDataURL(file);
 }
-function editStudent(row){ studentModal(studentsCache.find(function(s){return s.row===row;})); }
+function editStudent(row){ studentModal(studentsCache.find(function(s){return String(s.row)===String(row);})); }
 // 1) ลบรายบุคคล
 function delStudent(row,name){
   Swal.fire({title:'ลบนักเรียน?',
@@ -1500,8 +1500,8 @@ function loadUsers(){
       return '<tr><td>'+esc(u.username)+'</td><td>'+esc(u.name)+'</td>'
         +'<td><span class="badge bg-info">'+(roleTH[u.role]||u.role)+'</span></td>'
         +'<td><span class="badge '+(u.status==='ใช้งาน'?'bg-success':'bg-secondary')+'">'+esc(u.status)+'</span></td>'
-        +'<td><button class="btn btn-sm btn-warning" onclick="editUser('+u.row+')"><i class="bi bi-pencil"></i></button> '
-        +'<button class="btn btn-sm btn-danger" onclick="delUser('+u.row+',\''+esc(u.username)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+        +'<td><button class="btn btn-sm btn-warning" onclick="editUser(\''+esc(u.row)+'\')"><i class="bi bi-pencil"></i></button> '
+        +'<button class="btn btn-sm btn-danger" onclick="delUser(\''+esc(u.row)+'\',\''+esc(u.username)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
     }).join('');
   });
 }
@@ -1548,7 +1548,7 @@ function userModal(u){
     api('saveUser',r.value).then(function(res){showLoader(false);
       if(res.ok){toast('success','บันทึกแล้ว');loadUsers();}else Swal.fire('ผิดพลาด',res.message,'error');});}});
 }
-function editUser(row){userModal(usersCache.find(function(u){return u.row===row;}));}
+function editUser(row){userModal(usersCache.find(function(u){return String(u.row)===String(row);}));}
 function delUser(row,name){
   Swal.fire({title:'ลบผู้ใช้?',text:name,icon:'warning',showCancelButton:true,confirmButtonText:'ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
   .then(function(r){if(r.isConfirmed){api('deleteUser',row).then(function(){toast('success','ลบแล้ว');loadUsers();});}});
@@ -1575,8 +1575,8 @@ function loadActivities(){
     document.getElementById('actBody').innerHTML = list.map(function(a){
       return '<tr><td class="fw-bold">'+esc(a.name)+'</td><td>'+esc(a.lateAfter)+' น.</td>'
         +'<td><span class="badge '+(a.status==='เปิด'?'bg-success':'bg-secondary')+'">'+esc(a.status)+'</span></td>'
-        +'<td><button class="btn btn-sm btn-warning" onclick="editActivity('+a.row+')"><i class="bi bi-pencil"></i></button> '
-        +'<button class="btn btn-sm btn-danger" onclick="delActivity('+a.row+',\''+esc(a.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+        +'<td><button class="btn btn-sm btn-warning" onclick="editActivity(\''+esc(a.row)+'\')"><i class="bi bi-pencil"></i></button> '
+        +'<button class="btn btn-sm btn-danger" onclick="delActivity(\''+esc(a.row)+'\',\''+esc(a.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
     }).join('') || '<tr><td colspan="4" class="text-center text-muted py-3">ยังไม่มีกิจกรรม</td></tr>';
   });
 }
@@ -1600,7 +1600,7 @@ function activityModal(a){
     api('saveActivity',r.value).then(function(res){showLoader(false);
       if(res.ok){toast('success','บันทึกแล้ว');loadActivities();}else Swal.fire('ผิดพลาด',res.message,'error');});}});
 }
-function editActivity(row){activityModal(activitiesCache.find(function(a){return a.row===row;}));}
+function editActivity(row){activityModal(activitiesCache.find(function(a){return String(a.row)===String(row);}));}
 function delActivity(row,name){
   Swal.fire({title:'ลบกิจกรรม?',text:name,icon:'warning',showCancelButton:true,confirmButtonText:'ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
   .then(function(r){if(r.isConfirmed){api('deleteActivity',row).then(function(){toast('success','ลบแล้ว');loadActivities();});}});
