@@ -2,1176 +2,1665 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SIAM4 ClassRoom · เช็กชื่อในชั้นเรียน</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Siam4 Smart Check-In-2569</title>
+<link rel="icon" type="image/png" href="https://img2.pic.in.th/9EB1F8D9-035B-47E6-8B80-F216A0B00FBE_L0_001-15_6_2569_23_20_25-removebg-preview.png">
+<link rel="apple-touch-icon" href="https://img2.pic.in.th/9EB1F8D9-035B-47E6-8B80-F216A0B00FBE_L0_001-15_6_2569_23_20_25-removebg-preview.png">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-:root{
-  --bg:#fdf6fb; --card:#ffffff; --ink:#5b5470; --soft:#8b85a3;
-  --pink:#ffb6d9; --pink-d:#ff8fc4; --mint:#b8e6d4; --mint-d:#7ed4b0;
-  --lav:#d4c5f9; --lav-d:#b69bf0; --sky:#bfe0ff; --sky-d:#8cc4ff;
-  --lemon:#fff3b0; --peach:#ffd6c0; --line:#f0e6f5; --ok:#7ed4b0;
-  --warn:#ffc98c; --bad:#ff9eb0; --shadow:0 8px 28px rgba(180,140,200,.18);
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Sarabun','Segoe UI',sans-serif;background:linear-gradient(135deg,#fdf6fb,#f3f0ff 60%,#eefaf5);color:var(--ink);min-height:100vh}
-button{font-family:inherit;cursor:pointer;border:none;border-radius:16px;font-weight:600;transition:.18s}
-button:active{transform:scale(.96)}
-button:disabled{opacity:.5;cursor:not-allowed}
-input,select,textarea{font-family:inherit;border:2px solid var(--line);border-radius:14px;padding:11px 14px;font-size:15px;color:var(--ink);background:#fff;outline:none;width:100%;transition:.15s}
-input:focus,select:focus,textarea:focus{border-color:var(--lav-d);box-shadow:0 0 0 4px rgba(182,155,240,.18)}
-.hidden{display:none!important}
-.muted{color:var(--soft);font-size:13px}
-.mt{margin-top:12px}
+  :root{
+    --primary:#1e3a8a; --primary-light:#3b82f6; --accent:#f59e0b;
+    --success:#16a34a; --danger:#dc2626; --warning:#f59e0b;
+  }
+  *{font-family:'Sarabun',sans-serif !important;}
+  body{background:#f1f5f9;color:#1e293b;}
+  .brand-gradient{background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);}
 
-.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.auth-card{background:var(--card);border-radius:28px;box-shadow:var(--shadow);padding:34px 28px;width:100%;max-width:400px;text-align:center}
-.logo{width:84px;height:84px;border-radius:24px;object-fit:contain;background:#fff;padding:8px;box-shadow:0 6px 18px rgba(180,140,200,.22);margin-bottom:14px}
-.auth h1{font-size:21px;margin-bottom:4px}
-.auth .sub{font-size:13px;color:var(--soft);margin-bottom:22px}
-.field{text-align:left;margin-bottom:14px}
-.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--soft)}
-.btn-primary{background:linear-gradient(135deg,var(--pink),var(--lav-d));color:#fff;padding:14px;width:100%;font-size:16px;box-shadow:0 6px 16px rgba(255,143,196,.4)}
-.link{color:var(--lav-d);font-size:13px;background:none;margin-top:16px;text-decoration:underline}
+  #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 60%,#60a5fa 100%);padding:16px;}
+  .login-card{max-width:420px;width:100%;border:none;border-radius:20px;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;}
+  .login-logo{width:200px;height:200px;border-radius:0%;object-fit:cover;border:0px solid #fff;
+    box-shadow:0 0px 0px rgba(0,0,0,.2);background:transparent;}
 
-.app{display:none;min-height:100vh;flex-direction:column}
-.topbar{background:rgba(255,255,255,.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;padding:12px 16px;box-shadow:0 2px 14px rgba(180,140,200,.12)}
-.topbar img{width:40px;height:40px;border-radius:12px;object-fit:contain;background:#fff;padding:3px}
-.topbar .t-title{font-weight:700;font-size:16px;line-height:1.1}
-.topbar .t-sub{font-size:11px;color:var(--soft)}
-.topbar .spacer{flex:1}
-.chip{background:var(--lav);color:#6b4fa0;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700}
-.logout{background:var(--pink);color:#fff;padding:8px 14px;font-size:13px}
-.nav{display:flex;gap:8px;overflow-x:auto;padding:10px 16px;background:rgba(255,255,255,.6)}
-.nav button{white-space:nowrap;background:#fff;color:var(--soft);padding:9px 16px;font-size:14px;border:2px solid var(--line)}
-.nav button.on{background:linear-gradient(135deg,var(--mint),var(--sky));color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(124,200,200,.35)}
-.main{flex:1;padding:18px 16px 90px;max-width:1100px;margin:0 auto;width:100%}
-.page{display:none;animation:fade .3s}
-.page.on{display:block}
-@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .sidebar{padding-bottom:24px;}
+  .sidebar{width:260px;min-height:100vh;max-height:100vh;position:fixed;top:0;left:0;z-index:1040;
+    background:linear-gradient(180deg,#1e3a8a,#1e40af);transition:.3s;overflow-y:auto;padding-bottom:24px;}
+  .sidebar .logo-box{padding:18px;text-align:center;border-bottom:1px solid rgba(255,255,255,.15);}
+  .sidebar .logo-box img{width:64px;height:64px;border-radius:0%;object-fit:cover;border:0px solid #fff;background:transparent;}
+  .nav-link-side{color:#cbd5e1;padding:12px 20px;display:flex;align-items:center;gap:12px;
+    border-radius:10px;margin:4px 12px;transition:.2s;cursor:pointer;font-weight:500;}
+  .nav-link-side:hover{background:rgba(255,255,255,.1);color:#fff;}
+  .nav-link-side.active{background:var(--accent);color:#1e293b;font-weight:600;}
+  .nav-link-side i{font-size:1.2rem;}
+  .main-content{margin-left:260px;padding:20px;transition:.3s;}
+  .topbar{background:#fff;border-radius:14px;padding:14px 20px;margin-bottom:20px;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);display:flex;align-items:center;justify-content:space-between;}
 
-.card{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
-.card h2{font-size:17px;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.row{display:flex;gap:12px;flex-wrap:wrap}
-.row>*{flex:1;min-width:140px}
-.row.tight>*{min-width:auto}
-.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:6px}
-.info-box{background:linear-gradient(135deg,#fff,#fdf6fb);border:2px solid var(--line);border-radius:14px;padding:10px 12px}
-.info-box .k{font-size:11px;color:var(--soft)}
-.info-box .v{font-size:15px;font-weight:700;margin-top:2px}
+  @media(max-width:991px){
+    .sidebar{left:-280px;} .sidebar.show{left:0;}
+    .main-content{margin-left:0;}
+  }
 
-.scan-input{font-size:22px;text-align:center;letter-spacing:1px;border-color:var(--lav-d);font-weight:700}
-.btn-mint{background:linear-gradient(135deg,var(--mint-d),var(--mint));color:#fff;padding:13px 18px}
-.btn-sky{background:linear-gradient(135deg,var(--sky-d),var(--sky));color:#fff;padding:13px 18px}
-.btn-pink{background:linear-gradient(135deg,var(--pink-d),var(--pink));color:#fff;padding:13px 18px}
-.btn-lav{background:linear-gradient(135deg,var(--lav-d),var(--lav));color:#fff;padding:13px 18px}
-.btn-sm{padding:8px 14px;font-size:13px}
-.btn-line{background:#fff;border:2px solid var(--line);color:var(--soft);padding:11px 16px}
-.btn-warn{background:linear-gradient(135deg,#ffb55c,#ffd08c);color:#fff;padding:11px 16px}
-.btn-del{background:#ffe3e8;color:#cc5a72;padding:8px 12px;font-size:13px}
-.toggle{display:inline-flex;gap:6px;background:var(--line);padding:4px;border-radius:14px}
-.toggle button{background:transparent;color:var(--soft);padding:7px 14px;font-size:13px}
-.toggle button.on{background:#fff;color:var(--lav-d);box-shadow:0 2px 8px rgba(180,140,200,.2)}
+  .stat-card{border:none;border-radius:16px;color:#fff;overflow:hidden;position:relative;
+    box-shadow:0 6px 20px rgba(0,0,0,.08);}
+  .stat-card .icon{font-size:2.6rem;opacity:.3;position:absolute;right:16px;top:14px;}
+  .stat-card h2{font-weight:700;margin:0;}
+  .bg-total{background:linear-gradient(135deg,#3b82f6,#1e3a8a);}
+  .bg-present{background:linear-gradient(135deg,#22c55e,#15803d);}
+  .bg-late{background:linear-gradient(135deg,#f59e0b,#d97706);}
+  .bg-absent{background:linear-gradient(135deg,#ef4444,#b91c1c);}
+  .card{border:none;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+  .card-header{background:#fff;border-bottom:2px solid #f1f5f9;font-weight:600;border-radius:16px 16px 0 0 !important;}
 
-#reader{width:100%;max-width:340px;margin:10px auto;border-radius:18px;overflow:hidden;border:3px solid var(--lav)}
-.hist{max-height:340px;overflow-y:auto;margin-top:8px}
-.hist-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:#fdf9fc;margin-bottom:7px;border:1px solid var(--line)}
-.hist-item .av{width:38px;height:38px;border-radius:11px;background:var(--lav);color:#6b4fa0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;overflow:hidden;flex-shrink:0}
-.hist-item .av img{width:100%;height:100%;object-fit:cover}
-.hist-item .nm{font-weight:600;font-size:14px}
-.hist-item .mtx{font-size:11px;color:var(--soft)}
-.badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;margin-left:auto;white-space:nowrap}
-.b-ok{background:#e0f7ee;color:#2f9c75}.b-late{background:#fff0d9;color:#cc8a3a}
-.b-leave{background:#e6f0ff;color:#4a78c4}.b-absent{background:#ffe3e8;color:#cc5a72}.b-flee{background:#f0e3ff;color:#8a5ac4}
+  #reader{border-radius:14px;overflow:hidden;max-width:420px;margin:0 auto;}
+  .scan-result-row{animation:flash .6s;}
+  @keyframes flash{0%{background:#fef08a;}100%{background:transparent;}}
 
-.pop-mask{position:fixed;inset:0;background:rgba(91,84,112,.32);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:.2s}
-.pop-mask.show{opacity:1;pointer-events:auto}
-.pop{background:#fff;border-radius:28px;padding:30px 28px;text-align:center;max-width:330px;width:88%;box-shadow:0 20px 60px rgba(150,110,180,.35);transform:scale(.8);transition:.25s cubic-bezier(.2,1.4,.4,1)}
-.pop-mask.show .pop{transform:scale(1)}
-.pop .ic{width:74px;height:74px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:38px}
-.pop.ok .ic{background:#e0f7ee}.pop.dup .ic{background:#fff0d9}.pop.err .ic{background:#ffe3e8}
-.pop .nm{font-size:19px;font-weight:700;margin-bottom:4px}
-.pop .ms{font-size:14px;color:var(--soft)}
-.pop .ph{width:64px;height:64px;border-radius:16px;object-fit:cover;margin:6px auto 0;border:3px solid var(--mint)}
+  .badge-present{background:#dcfce7;color:#15803d;}
+  .badge-late{background:#fef3c7;color:#b45309;}
+  .badge-absent{background:#fee2e2;color:#b91c1c;}
+  .student-photo{width:42px;height:42px;border-radius:8px;object-fit:cover;background:#e2e8f0;}
 
-.modal-mask{position:fixed;inset:0;background:rgba(91,84,112,.4);display:none;align-items:flex-end;justify-content:center;z-index:150}
-.modal-mask.show{display:flex}
-.modal{background:#fff;border-radius:26px 26px 0 0;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;animation:up .3s}
-@keyframes up{from{transform:translateY(100%)}to{transform:none}}
-.modal-h{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
-.modal-h h3{font-size:16px;flex:1}
-.modal-b{padding:14px 18px;overflow-y:auto}
-.modal-f{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:10px}
-.stu-row{display:flex;align-items:center;gap:10px;padding:9px;border-radius:12px;border:1px solid var(--line);margin-bottom:7px}
-.stu-row .no{width:26px;height:26px;border-radius:8px;background:var(--lemon);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#a8830f;flex-shrink:0}
-.stu-row .nm{flex:1;font-size:14px;font-weight:600}
-.stu-row select,.stu-row input{width:auto;min-width:90px;padding:7px 10px;font-size:13px}
+  .id-card{width:320px;border:2px solid var(--primary);border-radius:16px;overflow:hidden;
+    background:#fff;margin:8px;display:inline-block;vertical-align:top;}
+  .id-card .head{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;padding:10px;text-align:center;}
+  .id-card .head img{width:44px;height:44px;border-radius:50%;background:#fff;object-fit:cover;}
+  .id-card .body{padding:12px;text-align:center;}
+  .id-card .photo{width:110px;height:130px;object-fit:cover;border-radius:8px;border:2px solid #e2e8f0;background:#f1f5f9;}
 
-table.tbl{width:100%;border-collapse:collapse;font-size:13px}
-table.tbl th,table.tbl td{border:1px solid var(--line);padding:7px 8px;text-align:center}
-table.tbl th{background:var(--lav);color:#6b4fa0;position:sticky;top:0}
-table.tbl td.l{text-align:left}
-table.tbl tr.below{background:#ffe3e8}
-.tbl-wrap{overflow:auto;max-height:60vh;border-radius:14px;border:1px solid var(--line)}
-
-.list-item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;border:1px solid var(--line);margin-bottom:8px;background:#fff}
-.list-item .ti{flex:1}
-.list-item .ti .h{font-weight:700;font-size:14px}
-.list-item .ti .s{font-size:12px;color:var(--soft)}
-.empty{text-align:center;color:var(--soft);padding:30px 10px;font-size:14px}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:20px;font-size:14px;z-index:300;opacity:0;transition:.3s;pointer-events:none}
-.toast.show{opacity:1}
-.footer{text-align:center;padding:14px;font-size:12px;color:var(--soft)}
-.footer code{background:var(--lav);color:#6b4fa0;padding:2px 6px;border-radius:6px;font-family:monospace}
-
-.lookup-result .sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
-.sum-pill{background:#fdf9fc;border:2px solid var(--line);border-radius:14px;padding:10px;text-align:center}
-.sum-pill .v{font-size:20px;font-weight:800}.sum-pill .k{font-size:11px;color:var(--soft)}
-@media(max-width:480px){.lookup-result .sum-grid{grid-template-columns:repeat(2,1fr)}}
-
-/* บัตรนักเรียน */
-.cards-wrap{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px}
-.idcard{width:340px;height:214px;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 4px 16px rgba(150,110,180,.25);border:1px solid #eee;display:flex;flex-direction:column;page-break-inside:avoid}
-.idcard .hd{height:46px;display:flex;align-items:center;gap:8px;padding:0 12px;color:#fff}
-.idcard .hd img{width:32px;height:32px;border-radius:8px;background:#fff;padding:2px;object-fit:contain}
-.idcard .hd .sn{font-weight:700;font-size:14px;line-height:1.1}
-.idcard .hd .sn small{font-weight:400;font-size:10px;opacity:.9}
-.idcard .bd{flex:1;display:flex;padding:10px 12px;gap:10px}
-.idcard .ph{width:74px;height:96px;border-radius:8px;object-fit:cover;border:2px solid var(--line);background:#f3f0ff;flex-shrink:0}
-.idcard .det{flex:1;font-size:12px;line-height:1.55}
-.idcard .det b{font-size:14px}
-.idcard .det .lb{color:#999;font-size:10px}
-.idcard .bc{padding:4px 12px 8px;text-align:center}
-.idcard .bc svg,.idcard .bc canvas,.idcard .bc img{max-width:100%;height:38px}
-.idcard .bc .qrbox{display:inline-block}
-.idcard .bc .qrbox img,.idcard .bc .qrbox canvas{height:54px;width:54px}
-
-@media print{
-  body *{visibility:hidden}
-  #printArea,#printArea *{visibility:visible}
-  #printArea{position:absolute;left:0;top:0;width:100%}
-  .no-print{display:none!important}
-}
+  .footer-text{text-align:center;color:#64748b;font-size:.85rem;padding:16px;margin-top:24px;}
+  .btn-primary{background:var(--primary);border-color:var(--primary);}
+  .btn-primary:hover{background:#1e40af;}
+  .spinner-overlay{position:fixed;inset:0;background:rgba(255,255,255,.7);z-index:2000;
+    display:none;align-items:center;justify-content:center;}
+  table.dataTable td{vertical-align:middle;}
 </style>
 </head>
 <body>
 
-<!-- ============ LOGIN ============ -->
-<div class="auth" id="authView">
-  <div class="auth-card">
-    <img class="logo" src="https://img1.pic.in.th/images/-7b8aca0fdb73ae1d.png" alt="logo" onerror="this.style.display='none'">
-    <h1>SIAM4 ClassRoom</h1>
-    <div class="sub">ระบบเช็กชื่อในชั้นเรียน &amp; เช็กภาระงาน<br>โรงเรียนสยามกลการ 4 · สพป.มุกดาหาร</div>
-    <div id="loginBox">
-      <div class="field"><label>ชื่อผู้ใช้</label><input id="lgUser" placeholder="username" autocomplete="username"></div>
-      <div class="field"><label>รหัสผ่าน</label><input id="lgPass" type="password" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
-      <button class="link" onclick="showLookup()">🔎 ตรวจสอบผลการเรียนของฉัน (นักเรียน)</button>
+<div class="spinner-overlay" id="loader">
+  <div class="spinner-border text-primary" style="width:3rem;height:3rem;"></div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="card login-card">
+    <div class="brand-gradient text-center text-white p-4">
+      <img src="https://img2.pic.in.th/Gemini_Generated_Image_1206ha1206ha1206-removebg-preview.png" class="login-logo" alt="logo"
+           onerror="this.style.display='none'">
+      <h2 class="mt-3 mb-0 fw-bold">SIAM4 Smart Check-In</h2>
+      <small>ระบบบันทึกติดตามการเข้า - ออก| รร.สยามกลการ 4 สพป.มุกดาหาร</small>
     </div>
-    <div id="lookupBox" class="hidden">
-      <div class="field"><label>รหัสนักเรียน</label><input id="lkCode" inputmode="numeric" placeholder="รหัสนักเรียน"></div>
-      <div class="field"><label>เลขบัตรประชาชน</label><input id="lkId" inputmode="numeric" placeholder="13 หลัก" onkeydown="if(event.key==='Enter')doLookup()"></div>
-      <button class="btn-mint" style="width:100%;padding:14px" onclick="doLookup()">ตรวจสอบ</button>
-      <button class="link" onclick="showLogin()">← กลับไปหน้าเข้าสู่ระบบ</button>
-      <div id="lookupResult" class="lookup-result" style="margin-top:16px;text-align:left"></div>
+    <div class="card-body p-4">
+      <h6 class="text-center text-muted mb-4"><i class="bi bi-shield-lock"></i> เข้าสู่ระบบ</h6>
+      <div class="mb-3">
+        <label class="form-label">ชื่อผู้ใช้</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person"></i></span>
+          <input type="text" id="loginUser" class="form-control" placeholder="username">
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label">รหัสผ่าน</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-key"></i></span>
+          <input type="password" id="loginPass" class="form-control" placeholder="password"
+                 onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+      </div>
+      <button class="btn btn-primary w-100 py-2 fw-bold" onclick="doLogin()">
+        <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
+      </button>
+      <div class="text-center mt-3 small text-muted">
+        <button type="button" class="btn btn-outline-primary w-100 mt-2" onclick="showStudentLookup()">
+        <i class="bi bi-search"></i> ตรวจสอบการเข้าร่วมกิจกรรม (นักเรียน)
+        </button>
+        © 2026 Siam4 Smart Check-In<br>
+        Developed by KRU SUN SIAM4 (Mr.CHANNARONG MONGKOL)
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ============ APP ============ -->
-<div class="app" id="appView">
-  <div class="topbar">
-    <img src="https://img1.pic.in.th/images/-7b8aca0fdb73ae1d.png" onerror="this.style.display='none'">
-    <div><div class="t-title">SIAM4 ClassRoom</div><div class="t-sub">โรงเรียนสยามกลการ 4</div></div>
-    <div class="spacer"></div>
-    <span class="chip" id="userChip">—</span>
-    <button class="logout" onclick="logout()">ออก</button>
+<!-- APP -->
+<div id="appScreen" style="display:none;">
+  <div class="sidebar" id="sidebar">
+    <div class="logo-box">
+      <img src="https://s.imgz.io/2026/06/06/-c6d37081117ae12e.png" alt="logo" onerror="this.style.display='none'">
+      <div class="text-white fw-bold mt-2" style="font-size:.95rem;">SIAM4 Smart Check-In</div>
+      <div class="text-white-50" style="font-size:.75rem;">ระบบติดตามการเข้าออก รร.สยามกลการ 4</div>
+    </div>
+    <nav class="mt-2" id="sideNav"></nav>
   </div>
-  <div class="nav" id="navBar"></div>
-  <div class="main">
 
-    <!-- ===== PAGE: CHECK ===== -->
-    <div class="page" id="pg-check">
-      <div class="card">
-        <div class="row tight">
-          <button class="btn-mint" id="modeAtt" onclick="setMode('att')">✅ เช็กชื่อในคาบ</button>
-          <button class="btn-line" id="modeAsg" onclick="setMode('asg')">📦 เช็กภาระงาน</button>
-        </div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-light d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+        <h5 class="mb-0 fw-bold text-primary" id="pageTitle">แดชบอร์ด</h5>
       </div>
-      <div class="card">
-        <h2>🎯 เลือกรายวิชา</h2>
-        <select id="subjSel" onchange="onSubjectChange()"><option value="">— เลือกรหัสวิชา —</option></select>
-        <div id="subjInfo" class="hidden">
-          <div class="info-grid">
-            <div class="info-box"><div class="k">ชื่อวิชา</div><div class="v" id="iName">—</div></div>
-            <div class="info-box"><div class="k">หน่วยกิต</div><div class="v" id="iCredit">—</div></div>
-            <div class="info-box"><div class="k">ครูผู้สอน</div><div class="v" id="iTeacher">—</div></div>
-            <div class="info-box"><div class="k">ภาค/ปี</div><div class="v" id="iTerm">—</div></div>
-            <div class="info-box"><div class="k">ชั้น</div><div class="v" id="iGrade">—</div></div>
-            <div class="info-box"><div class="k">เกณฑ์ตัดสิน</div><div class="v" id="iCrit">—</div></div>
-          </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="text-end d-none d-sm-block">
+          <div class="fw-bold" id="userName" style="font-size:.9rem;"></div>
+          <small class="text-muted" id="userRole"></small>
         </div>
-        <div id="periodWrap" class="mt"><select id="periodSel" onchange="renderHist()"><option value="">— เลือกคาบ —</option></select></div>
-        <div id="asgWrap" class="hidden mt">
-          <div class="row tight">
-            <select id="asgSel" onchange="renderAsgHist()"><option value="">— เลือกชิ้นงาน —</option></select>
-            <button class="btn-lav" onclick="openNewAsg()" style="flex:0 0 auto">+ ชิ้นงานใหม่</button>
-          </div>
-        </div>
-      </div>
-      <div class="card" id="scanCard" style="display:none">
-        <h2 id="scanTitle">📷 สแกน / กรอกรหัสนักเรียน</h2>
-        <div class="field"><input id="scanInput" class="scan-input" inputmode="numeric" placeholder="ยิงบาร์โค้ด หรือพิมพ์รหัส แล้ว Enter" onkeydown="if(event.key==='Enter')submitScan()"></div>
-        <div class="row tight">
-          <button class="btn-sky" onclick="submitScan()">บันทึก</button>
-          <button class="btn-lav" id="camBtn" onclick="toggleCam()">📷 เปิดกล้อง</button>
-        </div>
-        <div id="reader"></div>
-        <div class="row tight mt"><button class="btn-pink" onclick="openUnscanned()">📋 ดึงรายชื่อคนที่ยังไม่บันทึก</button></div>
-        <h2 style="margin-top:18px">🕑 ประวัติล่าสุด <span class="muted" id="histCount"></span></h2>
-        <div class="hist" id="histList"><div class="empty">ยังไม่มีรายการ</div></div>
+        <button class="btn btn-outline-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i></button>
       </div>
     </div>
 
-    <!-- ===== PAGE: SUMMARY ===== -->
-    <div class="page" id="pg-summary">
-      <div class="card">
-        <h2>📊 สรุปข้อมูล</h2>
-        <select id="sumSubj" onchange="loadSummary()"><option value="">— เลือกรายวิชา —</option></select>
-        <div class="row tight mt">
-          <button class="btn-mint" id="sumTabAtt" onclick="sumTab('att')">⏱ เวลาเรียน</button>
-          <button class="btn-line" id="sumTabScore" onclick="sumTab('score')">💯 คะแนนภาระงาน</button>
-        </div>
-      </div>
+    <div id="content"></div>
 
-      <div class="card hidden" id="sumAttCard">
-        <h2>⏱ สรุปเวลาเรียน</h2>
-        <div class="row">
-          <div><label class="muted">ตั้งแต่วันที่</label><input type="date" id="sumFrom"></div>
-          <div><label class="muted">ถึงวันที่</label><input type="date" id="sumTo"></div>
-          <div style="display:flex;align-items:flex-end"><button class="btn-sky" onclick="loadSummary()">กรอง</button></div>
-        </div>
-        <div class="mt"><div class="muted" style="margin-bottom:6px">ฐานคิด % (ตัวหาร)</div>
-          <div class="toggle" id="denomToggle">
-            <button data-d="held" class="on" onclick="setDenom('held')">คาบที่จัดจริง</button>
-            <button data-d="credit" onclick="setDenom('credit')">หน่วยกิต×40</button>
-            <button data-d="maxAttend" onclick="setDenom('maxAttend')">คนมามากสุด</button>
-          </div>
-        </div>
-        <div class="mt"><div class="muted" style="margin-bottom:6px">แสดงเฉพาะ</div>
-          <div class="toggle" id="thToggle">
-            <button data-t="all" class="on" onclick="setThreshold('all')">ทั้งหมด</button>
-            <button data-t="80" onclick="setThreshold('80')">น้อยกว่า 80%</button>
-            <button data-t="60" onclick="setThreshold('60')">น้อยกว่า 60%</button>
-          </div>
-        </div>
-        <div class="info-grid mt" id="sumAttMeta"></div>
-        <div class="tbl-wrap mt" id="sumAttTable"></div>
-        <div class="row tight mt"><button class="btn-warn" onclick="exportAttPDF()">📄 ส่งออก PDF</button></div>
-      </div>
-
-      <div class="card hidden" id="sumScoreCard">
-        <h2>💯 สรุปคะแนนภาระงาน</h2>
-        <div class="tbl-wrap" id="sumScoreTable"></div>
-        <div class="row tight mt"><button class="btn-warn" onclick="exportScorePDF()">📄 ส่งออก PDF</button></div>
-      </div>
+    <div class="footer-text">
+      <i class="bi bi-code-slash"></i> © 2026 SIAM4 Check-In
+Developed by KRU SUNSIAM4 (Mr.CHANNARONG MONGKOL)
     </div>
-
-    <!-- ===== PAGE: SUBJECTS ===== -->
-    <div class="page" id="pg-subjects">
-      <div id="subjListView">
-        <div class="card">
-          <h2>📚 จัดการรายวิชา <button class="btn-lav btn-sm no-print" id="addSubjBtn" onclick="openSubjForm()" style="margin-left:auto">+ เพิ่มรายวิชา</button></h2>
-          <div id="subjList"></div>
-        </div>
-      </div>
-      <div id="subjDetailView" class="hidden">
-        <div class="card">
-          <h2><button class="btn-line btn-sm" onclick="closeSubjDetail()">← กลับ</button> <span id="sdTitle"></span></h2>
-          <div class="info-grid" id="sdInfo"></div>
-        </div>
-        <div class="card">
-          <h2>🗓 ตารางคาบสอน <button class="btn-lav btn-sm no-print" onclick="openSchedForm()" style="margin-left:auto">+ เพิ่มคาบ</button></h2>
-          <div id="sdSchedule"></div>
-        </div>
-        <div class="card">
-          <h2>🚫 งดคาบ / วันหยุด <button class="btn-lav btn-sm no-print" onclick="openCancelForm()" style="margin-left:auto">+ งดคาบ</button></h2>
-          <div id="sdCanceled"></div>
-        </div>
-        <div class="card">
-          <h2>📦 ชิ้นงาน <button class="btn-lav btn-sm no-print" onclick="openAsgFormDetail()" style="margin-left:auto">+ ชิ้นงาน</button></h2>
-          <div id="sdAssignments"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== PAGE: CARDS ===== -->
-    <div class="page" id="pg-cards">
-      <div class="card no-print">
-        <h2>🪪 บัตรนักเรียน</h2>
-        <div class="row">
-          <div><label class="muted">เลือกชั้น</label><select id="cardGrade" onchange="renderCards()"></select></div>
-          <div><label class="muted">สีหัวบัตร</label><input type="color" id="cardColor" value="#ff8fc4" onchange="renderCards()" style="height:46px;padding:4px"></div>
-        </div>
-        <div class="mt"><div class="muted" style="margin-bottom:6px">รูปแบบรหัส</div>
-          <div class="toggle" id="codeTypeToggle">
-            <button data-c="barcode" class="on" onclick="setCodeType('barcode')">Barcode</button>
-            <button data-c="qr" onclick="setCodeType('qr')">QR Code</button>
-          </div>
-        </div>
-        <div class="row tight mt">
-          <button class="btn-mint" onclick="window.print()">🖨 พิมพ์</button>
-          <button class="btn-warn" onclick="exportCardsPDF()">📄 ส่งออก PDF</button>
-        </div>
-      </div>
-      <div id="printArea"><div class="cards-wrap" id="cardsWrap"></div></div>
-    </div>
-
-    <!-- ===== PAGE: STUDENTS (admin) ===== -->
-    <div class="page" id="pg-students">
-      <div class="card">
-        <h2>👧 จัดการนักเรียน
-          <span style="margin-left:auto" class="no-print">
-            <button class="btn-lav btn-sm" onclick="openStudentForm()">+ เพิ่ม</button>
-            <button class="btn-sky btn-sm" onclick="openImport()">⬆ นำเข้า</button>
-          </span>
-        </h2>
-        <div class="row tight"><select id="stuFilterGrade" onchange="renderStudents()"></select>
-          <input id="stuSearch" placeholder="ค้นหาชื่อ/รหัส" oninput="renderStudents()"></div>
-        <div id="studentList" class="mt"></div>
-      </div>
-    </div>
-
-    <!-- ===== PAGE: USERS (admin) ===== -->
-    <div class="page" id="pg-users">
-      <div class="card">
-        <h2>👤 จัดการผู้ใช้ <button class="btn-lav btn-sm" onclick="openUserForm()" style="margin-left:auto">+ เพิ่มผู้ใช้</button></h2>
-        <div id="userList"></div>
-      </div>
-    </div>
-
-    <!-- ===== PAGE: PERIODS (admin) ===== -->
-    <div class="page" id="pg-periods">
-      <div class="card">
-        <h2>🕐 คาบเรียนกลาง (แม่แบบเวลา) <button class="btn-lav btn-sm" onclick="openPeriodForm()" style="margin-left:auto">+ เพิ่มคาบ</button></h2>
-        <div class="muted" style="margin-bottom:10px">ค่าเหล่านี้ใช้เติมเวลาเริ่ม/สิ้นสุดอัตโนมัติตอนเพิ่มตารางสอน</div>
-        <div id="periodList"></div>
-      </div>
-    </div>
-
-    <!-- ===== PAGE: SETTINGS (admin) ===== -->
-    <div class="page" id="pg-settings">
-      <div class="card">
-        <h2>⚙️ ตั้งค่าระบบ</h2>
-        <div class="field"><label>ชื่อโรงเรียน</label><input id="setSchool"></div>
-        <div class="field"><label>ปีการศึกษาปัจจุบัน (พ.ศ.)</label><input id="setYear" inputmode="numeric"></div>
-        <div class="field"><label>ภาคเรียนปัจจุบัน</label><select id="setTerm"><option value="1">1</option><option value="2">2</option></select></div>
-        <div class="field"><label>URL โลโก้</label><input id="setLogo"></div>
-        <button class="btn-mint" onclick="saveSet()">บันทึกการตั้งค่า</button>
-      </div>
-    </div>
-
   </div>
-  <div class="footer">&lt;/&gt; พัฒนาระบบโดย <code>Kru channarong mongkol 2569</code></div>
 </div>
 
-<!-- POPUP -->
-<div class="pop-mask" id="popMask"><div class="pop" id="pop">
-  <div class="ic" id="popIc">✅</div><div class="nm" id="popNm">—</div><div class="ms" id="popMs">—</div>
-  <img class="ph" id="popPh" style="display:none">
-</div></div>
-
-<!-- MODAL: เหมาสถานะ -->
-<div class="modal-mask" id="unscanMask"><div class="modal">
-  <div class="modal-h"><h3 id="unscanTitle">รายชื่อที่ยังไม่บันทึก</h3><button class="btn-line btn-sm" onclick="closeModal('unscanMask')">✕</button></div>
-  <div class="modal-b">
-    <div class="row tight" style="margin-bottom:10px" id="bulkBtns"></div>
-    <div id="unscanList"></div>
-  </div>
-  <div class="modal-f"><button class="btn-line" style="flex:1" onclick="closeModal('unscanMask')">ยกเลิก</button>
-    <button class="btn-mint" style="flex:2" id="unscanSave" onclick="saveUnscanned()">บันทึกสถานะ</button></div>
-</div></div>
-
-<!-- MODAL: ชิ้นงานใหม่ (จากหน้าเช็ก) -->
-<div class="modal-mask" id="asgMask"><div class="modal">
-  <div class="modal-h"><h3>เพิ่มชิ้นงานใหม่</h3><button class="btn-line btn-sm" onclick="closeModal('asgMask')">✕</button></div>
-  <div class="modal-b">
-    <div class="field"><label>ชื่อชิ้นงาน</label><input id="naName" placeholder="เช่น ใบงานที่ 1"></div>
-    <div class="field"><label>คะแนนเต็ม</label><input id="naScore" type="number" inputmode="numeric" placeholder="เช่น 10"></div>
-    <div class="field"><label>กำหนดส่ง (ไม่บังคับ)</label><input id="naDue" type="date"></div>
-  </div>
-  <div class="modal-f"><button class="btn-line" style="flex:1" onclick="closeModal('asgMask')">ยกเลิก</button>
-    <button class="btn-lav" style="flex:2" onclick="saveNewAsg()">บันทึกชิ้นงาน</button></div>
-</div></div>
-
-<!-- MODAL: ฟอร์มรายวิชา -->
-<div class="modal-mask" id="subjMask"><div class="modal">
-  <div class="modal-h"><h3 id="subjFormTitle">เพิ่มรายวิชา</h3><button class="btn-line btn-sm" onclick="closeModal('subjMask')">✕</button></div>
-  <div class="modal-b">
-    <input type="hidden" id="sfRow">
-    <div class="field"><label>รหัสวิชา</label><input id="sfCode" placeholder="เช่น ค21101"></div>
-    <div class="field"><label>ชื่อวิชา</label><input id="sfName"></div>
-    <div class="row tight">
-      <div class="field" style="flex:1"><label>หน่วยกิต</label><input id="sfCredit" type="number" step="0.5" inputmode="decimal"></div>
-      <div class="field" style="flex:1"><label>กลุ่มสาระ</label><input id="sfDept"></div>
-    </div>
-    <div class="field"><label>ชั้นที่สอน</label><select id="sfGrade"></select></div>
-    <div class="field"><label>ครูผู้สอน</label><select id="sfTeacher" onchange="syncTeacherName()"></select></div>
-    <input type="hidden" id="sfTeacherName">
-    <div class="row tight">
-      <div class="field" style="flex:1"><label>ปีการศึกษา (พ.ศ.)</label><input id="sfYear" inputmode="numeric"></div>
-      <div class="field" style="flex:1"><label>ภาคเรียน</label><select id="sfTerm"><option value="1">1</option><option value="2">2</option></select></div>
-    </div>
-    <div class="muted" id="sfHint"></div>
-  </div>
-  <div class="modal-f"><button class="btn-line" style="flex:1" onclick="closeModal('subjMask')">ยกเลิก</button>
-    <button class="btn-mint" style="flex:2" onclick="saveSubj()">บันทึกรายวิชา</button></div>
-</div></div>
-
-<!-- MODAL: ตารางคาบ -->
-<div class="modal-mask" id="schedMask"><div class="modal">
-  <div class="modal-h"><h3>เพิ่มคาบสอน</h3><button class="btn-line btn-sm" onclick="closeModal('schedMask')">✕</button></div>
-  <div class="modal-b">
-    <input type="hidden" id="scRow"><input type="hidden" id="scId">
-    <div class="field"><label>วัน</label><select id="scDay"></select></div>
-    <div class="field"><label>คาบ</label><select id="scPeriod" onchange="fillPeriodTime()"></select></div>
-    <div class="row tight">
-      <div class="field" style="flex:1"><label>เวลาเริ่ม</label><input id="scStart" placeholder="08:30"></div>
-      <div class="field" style="flex:1"><label>เวลาสิ้นสุด</label><input id="scEnd" placeholder="09:30"></div>
-    </div>
-  </div>
-  <div class="modal-f"><button class="btn-line" style="flex:1" onclick="closeModal('schedMask')">ยกเลิก</button>
-    <button class="btn-mint" style="flex:2" onclick="saveSched()">บันทึก</button></div>
-</div></div>
-
-<!-- MODAL: งดคาบ -->
-<div class="modal-mask" id="cancelMask"><div class="modal">
-  <div class="modal-h"><h3>งดคาบ / วันหยุด</h3><button class="btn-line btn-sm" onclick="closeModal('cancelMask')">✕</button></div>
-  <div class="modal-b">
-    <div class="field"><label>วันที่</label><input type="date" id="cpDate"></div>
-    <div class="field"><label>คาบ</label><select id="cpPeriod"></select></div>
-    <div class="field"><label>เหตุผล</label><input id="cpReason" placeholder="เช่น กิจกรรมโรงเรียน"></div>
-  </div>
-  <div class="modal-f"><button class="btn-line" style="flex:1" onclick="closeModal('cancelMask')">ยกเลิก</button>
-    <button class="btn-warn" style="flex:2" onclick="saveCancel()">บันทึกงดคาบ</button></div>
-</div></div>
-
-<!-- MODAL: คะแนนรายชิ้น -->
-<div class="modal-mask" id="scoreMask"><div class="modal">
-  <div class="modal-h"><h3 id="scoreTitle">แก้คะแนน</h3><button class="btn-line btn-sm" onclick="closeModal('scoreMask')">✕</button></div>
-  <div class="modal-b"><div id="scoreList"></div></div>
-  <div class="modal-f"><button class="btn-mint" style="flex:1" onclick="closeModal('scoreMask')">เสร็จสิ้น</button></div>
-</div></div>
-
-<!-- MODAL: นักเรียน -->
-<div class="modal-mask" id="stuMask"><div class="modal">
-  <div class="modal-h"><h3 id="stuFormTitle">เพิ่มนักเรียน</h3><button class="btn-line btn-sm" onclick="closeModal('stuMask')">✕</button></div>
-  <div class="modal-b">
-    <input type="hidden" id="stRow">
-    <div class="row tight">
-      <div class="field" style="flex:1"><label>รหัสนักเรียน</label><input id="stCode" inputmode="numeric"></div>
-      <div class="field" style="flex:1"><label>เลขที่</label><input id="stNo" inputmode="numeric"></div>
-    </div>
-    <div class="row tight">
-      <div class="field" style="flex:0 0 90px"><label>คำนำหน้า</label><input id="stPrefix" placeholder="ด.ช./ด.ญ."></div>
-      <div class="field" style="flex:1"><label>ชื่อ-สกุล</label><input id="stName"></div>
-    </div>
-    <div class="field"><label>ชั้น</label><select id="stGrade"></select></div>
-    <div class="field"><label>เลขบัตรประชาชน <span class="muted">(สำหรับให้นักเรียนตรวจสอบผล)</span></label><input id="stId" inputmode="numeric" placeholder="ว่างไว้ = ไม่เปลี่ยน"></div>
-    <div class="field"><label>รูปภาพ</label><input type="file" id="stPhoto" accept="image/*"><div class="muted" id="stPhotoMsg"></div></div>
-  </div>
-  <div class="modal-f"><button class="btn-line" style="flex:1" onclick="closeModal('stuMask')">ยกเลิก</button>
-    <button class="btn-mint" style="flex:2" id="stuSaveBtn" onclick="saveStu()">บันทึก</button></div>
-</div></div>
-
-<!-- MODAL: นำเข้านักเรียน -->
-<div class="modal-mask" id="importMask"><div class="modal">
-  <div class="modal-h"><h3>นำเข้านักเรียน</h3><button class="btn-line btn-sm" onclick="closeModal('importMask')">✕</button></div>
-  <div class="modal-b">
-    <div class="muted" style="margin-bottom:8px">วางข้อมูลจาก Excel ทีละแถว คั่นด้วย Tab หรือ , ตามลำดับ:<br><b>รหัสนักเรียน, เลขที่, คำนำหน้า, ชื่อ-สกุล, ชั้น, เลขบัตรประชาชน</b></div>
-    <textarea id="importBox" rows="10" placeholder="12345&#9;1&#9;ด.ช.&#9;สมชาย ใจดี&#9;ป.1&#9;1100000000000"></textarea>
-  </div>
-  <div class="modal-f"><button class="btn-line" style="flex:1" onclick="closeModal('importMask')">ยกเลิก</button>
-    <button class="btn-sky" style="flex:2" onclick="doImport()">นำเข้า</button></div>
-</div></div>
-
-<!-- MODAL: ผู้ใช้ -->
-<div class="modal-mask" id="userMask"><div class="modal">
-  <div class="modal-h"><h3 id="userFormTitle">เพิ่มผู้ใช้</h3><button class="btn-line btn-sm" onclick="closeModal('userMask')">✕</button></div>
-  <div class="modal-b">
-    <input type="hidden" id="usRow">
-    <div class="field"><label>ชื่อผู้ใช้ (username)</label><input id="usUser"></div>
-    <div class="field"><label>ชื่อ-สกุล</label><input id="usName"></div>
-    <div class="field"><label>สิทธิ์</label><select id="usRole"><option value="teacher">ครู</option><option value="admin">แอดมิน</option><option value="director">ผู้บริหาร</option></select></div>
-    <div class="field"><label>สถานะ</label><select id="usStatus"><option value="ใช้งาน">ใช้งาน</option><option value="ระงับ">ระงับ</option></select></div>
-    <div class="field"><label>รหัสผ่าน <span class="muted">(ว่างไว้ = ไม่เปลี่ยน)</span></label><input id="usPass" type="password"></div>
-  </div>
-  <div class="modal-f"><button class="btn-line" style="flex:1" onclick="closeModal('userMask')">ยกเลิก</button>
-    <button class="btn-mint" style="flex:2" onclick="saveUsr()">บันทึก</button></div>
-</div></div>
-
-<!-- MODAL: คาบกลาง -->
-<div class="modal-mask" id="periodMask"><div class="modal">
-  <div class="modal-h"><h3 id="periodFormTitle">เพิ่มคาบ</h3><button class="btn-line btn-sm" onclick="closeModal('periodMask')">✕</button></div>
-  <div class="modal-b">
-    <input type="hidden" id="pdRow">
-    <div class="field"><label>คาบที่</label><input id="pdNum" inputmode="numeric"></div>
-    <div class="row tight">
-      <div class="field" style="flex:1"><label>เวลาเริ่ม</label><input id="pdStart" placeholder="08:30"></div>
-      <div class="field" style="flex:1"><label>เวลาสิ้นสุด</label><input id="pdEnd" placeholder="09:30"></div>
-    </div>
-  </div>
-  <div class="modal-f"><button class="btn-line" style="flex:1" onclick="closeModal('periodMask')">ยกเลิก</button>
-    <button class="btn-mint" style="flex:2" onclick="savePer()">บันทึก</button></div>
-</div></div>
-
-<div class="toast" id="toast"></div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
-/* ===================== CONFIG ===================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbxSvgrYBrd4jmZQAZWtQVu3JfAQjfAa9NdsrXjbubbW--WSwc5LFeYgMrUXq9pkJQIh/exec';
-const GRADES = ['อ.1','อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6','ม.1','ม.2','ม.3'];
-const DAYS = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์'];
+/* ============================================================
+   ★★★ แก้ตรงนี้จุดเดียว ★★★
+   วางลิงก์ /exec ของ Apps Script คุณทับค่าด้านล่าง
+   (ต้องลงท้ายด้วย /exec และห้ามมีช่องว่างใน https://)
+   ============================================================ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbzpSdjoNFde4Mdijctk1GqYGs4VCYoGjLihN-4wJPEdiwpSKOu8H7dN2goYBSbPTH3i5w/exec';
 
-/* ===================== STATE ===================== */
-let CURRENT_USER=null, MODE='att';
-let SUBJECTS=[], PERIODS=[], SETTINGS={}, USERS_CACHE=[], STUDENTS_CACHE=[];
-let CUR_SUBJECT=null, CUR_ASSIGNMENTS=[];
-let scanner=null, camOn=false, scanLock=false;
-let SUM_DATA=null, SUM_DENOM='held', SUM_TH='all', SUM_TAB='att', SUM_SCORE=null;
-let SD_SUBJECT=null;            // subject ที่กำลังจัดการ
-let CARD_CODETYPE='barcode', CARD_PHOTO_BASE=null;
+let currentUser = null;
+const SESSION_KEY = 'sk4_session';
+const SESSION_HOURS = 1; // ให้ session หมดอายุใน 12 ชม. (ปรับได้)
 
-/* ===================== API ===================== */
-async function api(fn,args){
-  const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args||[]})});
-  const j=await res.json(); if(!j.ok) throw new Error(j.error||'error'); return j.data;
+function saveSession(user){
+  const payload = { user: user, exp: Date.now() + SESSION_HOURS*3600*1000 };
+  try{ localStorage.setItem(SESSION_KEY, JSON.stringify(payload)); }catch(e){}
 }
-function $(id){return document.getElementById(id);}
-function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
-
-/* ===================== POPUP + SOUND ===================== */
-let popTimer=null;
-function popup(kind,name,msg,photo){
-  const m=$('popMask'),p=$('pop');
-  p.className='pop '+(kind==='success'?'ok':kind==='duplicate'?'dup':'err');
-  $('popIc').textContent=kind==='success'?'✅':kind==='duplicate'?'⚠️':'❌';
-  $('popNm').textContent=name||''; $('popMs').textContent=msg||'';
-  const ph=$('popPh'); if(photo){ph.src=photo;ph.style.display='block';}else ph.style.display='none';
-  m.classList.add('show'); beep(kind);
-  clearTimeout(popTimer); popTimer=setTimeout(()=>m.classList.remove('show'),3000);
-}
-let AC=null;
-function beep(kind){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);const f=kind==='success'?[880,1320]:kind==='duplicate'?[660,520]:[320,260];o.type='sine';o.frequency.value=f[0];g.gain.setValueAtTime(.001,AC.currentTime);g.gain.exponentialRampToValueAtTime(.25,AC.currentTime+.02);o.start();o.frequency.setValueAtTime(f[1],AC.currentTime+.08);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.22);o.stop(AC.currentTime+.24);}catch(e){}}
-
-function openModal(id){$(id).classList.add('show');}
-function closeModal(id){$(id).classList.remove('show');}
-
-/* ===================== AUTH ===================== */
-function showLookup(){$('loginBox').classList.add('hidden');$('lookupBox').classList.remove('hidden');}
-function showLogin(){$('lookupBox').classList.add('hidden');$('loginBox').classList.remove('hidden');$('lookupResult').innerHTML='';}
-async function doLogin(){
-  const u=$('lgUser').value.trim(),p=$('lgPass').value;
-  if(!u||!p) return toast('กรอกชื่อผู้ใช้และรหัสผ่าน');
+function loadSession(){
   try{
-    const r=await api('login',[u,p]); if(!r.ok) return toast(r.message);
-    CURRENT_USER=r.user;
-    $('authView').style.display='none'; $('appView').style.display='flex';
-    $('userChip').textContent=r.user.name+' · '+roleTH(r.user.role);
-    buildNav(); await initApp();
-  }catch(e){toast('เข้าสู่ระบบไม่ได้: '+e.message);}
+    const raw = localStorage.getItem(SESSION_KEY);
+    if(!raw) return null;
+    const p = JSON.parse(raw);
+    if(!p || !p.user || !p.exp || Date.now() > p.exp){ localStorage.removeItem(SESSION_KEY); return null; }
+    return p.user;
+  }catch(e){ return null; }
 }
-function roleTH(r){return r==='admin'?'แอดมิน':r==='director'?'ผู้บริหาร':'ครู';}
-function logout(){location.reload();}
+function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
+let settings = {};
+let qrScanner = null;
+let lastScan = {code:'', t:0};
+const LOGO = 'https://s.imgz.io/2026/06/06/-c6d37081117ae12e.png';
 
-/* ===================== NAV ===================== */
-const NAV={
-  admin:[['check','📝 เช็กชื่อ/ภาระงาน'],['summary','📊 สรุปข้อมูล'],['subjects','📚 รายวิชา/งาน'],['cards','🪪 บัตรนักเรียน'],['students','👧 นักเรียน'],['users','👤 ผู้ใช้'],['periods','🕐 คาบเรียน'],['settings','⚙️ ตั้งค่า']],
-  teacher:[['check','📝 เช็กชื่อ/ภาระงาน'],['summary','📊 สรุปข้อมูล'],['subjects','📚 รายวิชา/งาน'],['cards','🪪 บัตรนักเรียน']],
-  director:[['summary','📊 สรุปข้อมูล'],['subjects','📚 รายวิชา/งาน'],['cards','🪪 บัตรนักเรียน']]
-};
-function buildNav(){
-  const items=NAV[CURRENT_USER.role]||NAV.teacher;
-  $('navBar').innerHTML=items.map((it,i)=>`<button data-pg="${it[0]}" class="${i===0?'on':''}" onclick="goto('${it[0]}')">${it[1]}</button>`).join('');
-  goto(items[0][0]);
-}
-function goto(pg){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  $('pg-'+pg).classList.add('on');
-  document.querySelectorAll('#navBar button').forEach(b=>b.classList.toggle('on',b.dataset.pg===pg));
-  if(pg==='summary') fillSummarySubjects();
-  if(pg==='subjects') renderSubjList();
-  if(pg==='cards') fillCardGrades();
-  if(pg==='students') renderStudents();
-  if(pg==='users') renderUsers();
-  if(pg==='periods') renderPeriods();
-  if(pg==='settings') fillSettings();
-}
-
-/* ===================== INIT ===================== */
-async function initApp(){
-  try{
-    const [subs,pers,setg]=await Promise.all([
-      api('getSubjects',[CURRENT_USER.username,CURRENT_USER.role]),
-      api('getPeriods',[]), api('getSettings',[])
-    ]);
-    SUBJECTS=subs||[]; PERIODS=pers||[]; SETTINGS=setg||{};
-    fillCheckSubjects();
-    $('periodSel').innerHTML='<option value="">— เลือกคาบ —</option>'+PERIODS.map(p=>`<option value="${p.period}">คาบ ${p.period} (${p.start}-${p.end})</option>`).join('');
-    setMode('att');
-  }catch(e){toast('โหลดข้อมูลไม่ได้: '+e.message);}
-}
-function fillCheckSubjects(){
-  $('subjSel').innerHTML='<option value="">— เลือกรหัสวิชา —</option>'+SUBJECTS.filter(s=>s.status!=='ปิด').map(s=>`<option value="${esc(s.code)}">${esc(s.code)} · ${esc(s.name)} (${esc(s.grade)})</option>`).join('');
-}
-
-/* ===================== CHECK PAGE ===================== */
-function setMode(m){
-  MODE=m;
-  $('modeAtt').className=m==='att'?'btn-mint':'btn-line';
-  $('modeAsg').className=m==='asg'?'btn-mint':'btn-line';
-  $('periodWrap').classList.toggle('hidden',m!=='att');
-  $('asgWrap').classList.toggle('hidden',m!=='asg');
-  $('scanTitle').textContent=m==='att'?'📷 สแกน / กรอกรหัส (เช็กชื่อ)':'📷 สแกน / กรอกรหัส (ส่งงาน)';
-  refreshScanCard(); renderHist();
-}
-async function onSubjectChange(){
-  const code=$('subjSel').value; CUR_SUBJECT=null; CUR_ASSIGNMENTS=[];
-  if(!code){$('subjInfo').classList.add('hidden');refreshScanCard();renderHist();return;}
-  try{
-    const r=await api('getSubjectStudents',[code]); if(!r.ok) return toast(r.message);
-    CUR_SUBJECT=r.subject; CUR_SUBJECT._students=r.students;
-    $('iName').textContent=r.subject.name; $('iCredit').textContent=r.subject.credit;
-    $('iTeacher').textContent=r.subject.teacher||'—'; $('iTerm').textContent='ภาค '+r.subject.term+' / '+r.subject.year;
-    $('iGrade').textContent=r.subject.grade; $('iCrit').textContent=r.subject.criterion;
-    $('subjInfo').classList.remove('hidden');
-    if(MODE==='asg') await loadAssignments(code);
-    refreshScanCard(); renderHist();
-  }catch(e){toast(e.message);}
-}
-async function loadAssignments(code){
-  CUR_ASSIGNMENTS=await api('getAssignments',[code])||[];
-  $('asgSel').innerHTML='<option value="">— เลือกชิ้นงาน —</option>'+CUR_ASSIGNMENTS.map(a=>`<option value="${esc(a.id)}">${esc(a.name)} (เต็ม ${a.fullScore})</option>`).join('');
-}
-function refreshScanCard(){$('scanCard').style.display=CUR_SUBJECT?'block':'none';}
-function validReady(){
-  if(!CUR_SUBJECT){toast('เลือกรายวิชาก่อน');return false;}
-  if(MODE==='att'&&!$('periodSel').value){toast('เลือกคาบก่อน');return false;}
-  if(MODE==='asg'&&!$('asgSel').value){toast('เลือกชิ้นงานก่อน');return false;}
-  return true;
-}
-async function submitScan(){
-  const code=$('scanInput').value.trim(); if(!code) return;
-  if(!validReady()){$('scanInput').value='';return;}
-  if(scanLock) return; scanLock=true; $('scanInput').value='';
-  try{
-    let r;
-    if(MODE==='att') r=await api('classCheckIn',[CUR_SUBJECT.code,$('periodSel').value,code,CURRENT_USER.name]);
-    else r=await api('scanAssignment',[$('asgSel').value,code,CURRENT_USER.name]);
-    if(r.ok){
-      const extra=MODE==='asg'?('ได้ '+r.score+' คะแนน'):('สถานะ: '+r.status);
-      popup('success',r.student.name,'บันทึกแล้ว · '+extra,r.student.photo);
-    }else popup(r.type||'error',(r.student&&r.student.name)||'',r.message,r.student&&r.student.photo);
-    renderHist();
-  }catch(e){popup('error','','ผิดพลาด: '+e.message);}
-  finally{setTimeout(()=>scanLock=false,350);$('scanInput').focus();}
-}
-async function toggleCam(){
-  if(camOn){await stopCam();return;} if(!validReady()) return;
-  try{
-    scanner=new Html5Qrcode('reader');
-    await scanner.start({facingMode:{exact:'environment'}},{fps:10,qrbox:{width:230,height:150}},onCamScan,()=>{})
-      .catch(async()=>{await scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:230,height:150}},onCamScan,()=>{});});
-    camOn=true;$('camBtn').textContent='⏹ ปิดกล้อง';$('camBtn').className='btn-pink';
-  }catch(e){toast('เปิดกล้องไม่ได้: '+e.message);}
-}
-async function stopCam(){try{if(scanner){await scanner.stop();await scanner.clear();}}catch(e){}scanner=null;camOn=false;$('camBtn').textContent='📷 เปิดกล้อง';$('camBtn').className='btn-lav';}
-let lastCam=0;
-function onCamScan(t){const now=Date.now();if(now-lastCam<1500)return;lastCam=now;$('scanInput').value=String(t).trim();submitScan();}
-
-async function renderHist(){if(MODE==='att')return renderAttHist();return renderAsgHist();}
-async function renderAttHist(){
-  const box=$('histList');
-  if(!CUR_SUBJECT||!$('periodSel').value){box.innerHTML='<div class="empty">เลือกวิชาและคาบเพื่อดูประวัติ</div>';$('histCount').textContent='';return;}
-  try{
-    const rows=await api('getClassAttToday',[CUR_SUBJECT.code,$('periodSel').value]);
-    $('histCount').textContent=rows.length?('('+rows.length+' คน)'):'';
-    box.innerHTML=rows.length?rows.map(r=>histRow(r.name,r.grade+' · '+r.timeTh+' น.',r.status)).join(''):'<div class="empty">ยังไม่มีรายการ</div>';
-  }catch(e){box.innerHTML='<div class="empty">โหลดประวัติไม่ได้</div>';}
-}
-async function renderAsgHist(){
-  const box=$('histList');
-  if(!$('asgSel').value){box.innerHTML='<div class="empty">เลือกชิ้นงานเพื่อดูประวัติ</div>';$('histCount').textContent='';return;}
-  try{
-    const rows=await api('getAssignmentScores',[$('asgSel').value]);
-    $('histCount').textContent=rows.length?('('+rows.length+' คน)'):'';
-    box.innerHTML=rows.length?rows.slice().reverse().map(r=>histRow(r.name,r.grade+' · '+r.dateTh,r.status,r.score)).join(''):'<div class="empty">ยังไม่มีรายการ</div>';
-  }catch(e){box.innerHTML='<div class="empty">โหลดประวัติไม่ได้</div>';}
-}
-function statusBadge(st){const m={'ปกติ':'b-ok','ส่งแล้ว':'b-ok','มาสาย':'b-late','ส่งช้า':'b-late','ลา':'b-leave','ขาดเรียน':'b-absent','ไม่ส่ง':'b-absent','หนีเรียน':'b-flee'};return `<span class="badge ${m[st]||'b-ok'}">${esc(st)}</span>`;}
-function histRow(name,meta,status,score){const ini=(name||'?').trim().charAt(0);const sc=(score!=null)?` · ${score} คะแนน`:'';return `<div class="hist-item"><div class="av">${esc(ini)}</div><div><div class="nm">${esc(name)}</div><div class="mtx">${esc(meta)}${sc}</div></div>${statusBadge(status)}</div>`;}
-
-let UNSCAN=[];
-async function openUnscanned(){
-  if(!validReady()) return;
-  try{
-    let r;
-    if(MODE==='att'){r=await api('getUnscannedStudents',[CUR_SUBJECT.code,$('periodSel').value,'']);$('unscanTitle').textContent='ยังไม่เช็กชื่อ · คาบ '+$('periodSel').value;}
-    else{r=await api('getUnsubmittedStudents',[$('asgSel').value]);$('unscanTitle').textContent='ยังไม่ส่งงาน · '+r.assignment.name;}
-    if(!r.ok) return toast(r.message);
-    UNSCAN=r.students;
-    if(!UNSCAN.length){toast('ทุกคนบันทึกครบแล้ว 🎉');return;}
-    const opts=MODE==='att'?['ขาดเรียน','ลา','มาสาย','หนีเรียน']:['ไม่ส่ง','ส่งช้า'];
-    $('bulkBtns').innerHTML=opts.map(o=>`<button class="btn-line btn-sm" onclick="bulkSet('${o}')">${o}ทั้งหมด</button>`).join('');
-    $('unscanList').innerHTML=UNSCAN.map(s=>`<div class="stu-row"><div class="no">${esc(s.no||'-')}</div><div class="nm">${esc(s.name)}</div><select data-code="${esc(s.code)}">${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`).join('');
-    openModal('unscanMask');
-  }catch(e){toast(e.message);}
-}
-function bulkSet(v){document.querySelectorAll('#unscanList select').forEach(s=>{if([...s.options].some(o=>o.value===v))s.value=v;});}
-async function saveUnscanned(){
-  const items=[...document.querySelectorAll('#unscanList select')].map(s=>({code:s.dataset.code,status:s.value}));
-  $('unscanSave').disabled=true;
-  try{
-    let r;
-    if(MODE==='att') r=await api('recordClassStatus',[CUR_SUBJECT.code,$('periodSel').value,items,CURRENT_USER.name,'']);
-    else r=await api('recordAssignmentStatus',[$('asgSel').value,items,CURRENT_USER.name]);
-    closeModal('unscanMask'); toast('บันทึก '+r.added+' คน'+(r.skipped?(' · ข้าม '+r.skipped):'')); renderHist();
-  }catch(e){toast(e.message);} finally{$('unscanSave').disabled=false;}
-}
-function openNewAsg(){if(!CUR_SUBJECT)return toast('เลือกรายวิชาก่อน');$('naName').value='';$('naScore').value='';$('naDue').value='';openModal('asgMask');}
-async function saveNewAsg(){
-  const name=$('naName').value.trim(),score=$('naScore').value;
-  if(!name)return toast('กรอกชื่อชิ้นงาน'); if(score===''||isNaN(score))return toast('กรอกคะแนนเต็ม');
-  try{
-    const r=await api('saveAssignment',[{code:CUR_SUBJECT.code,name:name,fullScore:Number(score),due:$('naDue').value,creator:CURRENT_USER.name}]);
-    closeModal('asgMask'); await loadAssignments(CUR_SUBJECT.code); $('asgSel').value=r.id; renderAsgHist(); toast('เพิ่มชิ้นงานแล้ว');
-  }catch(e){toast(e.message);}
-}
-
-/* ===================== SUMMARY PAGE ===================== */
-function fillSummarySubjects(){
-  $('sumSubj').innerHTML='<option value="">— เลือกรายวิชา —</option>'+SUBJECTS.map(s=>`<option value="${esc(s.code)}">${esc(s.code)} · ${esc(s.name)} (${esc(s.grade)})</option>`).join('');
-}
-function sumTab(t){
-  SUM_TAB=t;
-  $('sumTabAtt').className=t==='att'?'btn-mint':'btn-line';
-  $('sumTabScore').className=t==='score'?'btn-mint':'btn-line';
-  $('sumAttCard').classList.toggle('hidden',t!=='att');
-  $('sumScoreCard').classList.toggle('hidden',t!=='score');
-  loadSummary();
-}
-function setDenom(d){SUM_DENOM=d;document.querySelectorAll('#denomToggle button').forEach(b=>b.classList.toggle('on',b.dataset.d===d));renderAttTable();}
-function setThreshold(t){SUM_TH=t;document.querySelectorAll('#thToggle button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));renderAttTable();}
-async function loadSummary(){
-  const code=$('sumSubj').value; if(!code){$('sumAttTable').innerHTML='';$('sumScoreTable').innerHTML='';$('sumAttMeta').innerHTML='';return;}
-  try{
-    if(SUM_TAB==='att'){
-      const filter={dateFrom:$('sumFrom').value||'',dateTo:$('sumTo').value||''};
-      SUM_DATA=await api('getAttendanceSummary',[code,filter]);
-      if(!SUM_DATA.ok)return toast(SUM_DATA.message); renderAttTable();
-    }else{
-      SUM_SCORE=await api('getScoreSummary',[code]);
-      if(!SUM_SCORE.ok)return toast(SUM_SCORE.message); renderScoreTable();
-    }
-  }catch(e){toast(e.message);}
-}
-function calcPct(att,den){if(!den||den<=0)return 0;return Math.round(att/den*1000)/10;}
-function renderAttTable(){
-  if(!SUM_DATA||!SUM_DATA.ok)return;
-  const den=SUM_DATA.denominators[SUM_DENOM]||0;
-  const denLabel={held:'คาบที่จัดจริง',credit:'หน่วยกิต×40',maxAttend:'คนมามากสุด'}[SUM_DENOM];
-  $('sumAttMeta').innerHTML=`
-    <div class="info-box"><div class="k">คาบที่จัดจริง</div><div class="v">${SUM_DATA.denominators.held}</div></div>
-    <div class="info-box"><div class="k">ตามหลักสูตร</div><div class="v">${SUM_DATA.denominators.credit} ชม.</div></div>
-    <div class="info-box"><div class="k">มามากสุด</div><div class="v">${SUM_DATA.denominators.maxAttend}</div></div>
-    <div class="info-box"><div class="k">ฐานที่ใช้</div><div class="v">${denLabel} (${den})</div></div>`;
-  let rows=SUM_DATA.summary.map(s=>({...s,pct:calcPct(s.attended,den)}));
-  if(SUM_TH==='80')rows=rows.filter(s=>s.pct<80); if(SUM_TH==='60')rows=rows.filter(s=>s.pct<60);
-  $('sumAttTable').innerHTML=`<table class="tbl"><thead><tr><th>เลขที่</th><th>ชื่อ-สกุล</th><th>มา</th><th>สาย</th><th>ลา</th><th>ขาด</th><th>หนี</th><th>รวมมา</th><th>%</th></tr></thead><tbody>${
-    rows.length?rows.map(s=>`<tr class="${s.pct<60?'below':''}"><td>${esc(s.no)}</td><td class="l">${esc(s.name)}</td><td>${s.present}</td><td>${s.late}</td><td>${s.leave}</td><td>${s.absent}</td><td>${s.flee}</td><td>${s.attended}</td><td><b>${s.pct}%</b></td></tr>`).join(''):'<tr><td colspan="9">ไม่มีข้อมูล</td></tr>'
-  }</tbody></table>`;
-}
-function renderScoreTable(){
-  if(!SUM_SCORE||!SUM_SCORE.ok)return;
-  const A=SUM_SCORE.assignments;
-  $('sumScoreTable').innerHTML=`<table class="tbl"><thead><tr><th>เลขที่</th><th>ชื่อ-สกุล</th>${A.map(a=>`<th>${esc(a.name)}<br><small>(${a.fullScore})</small></th>`).join('')}<th>รวม</th></tr></thead><tbody>${
-    SUM_SCORE.rows.map(r=>`<tr><td>${esc(r.no)}</td><td class="l">${esc(r.name)}</td>${A.map(a=>{const d=r.detail[a.id];return `<td>${d.status==='ไม่ส่ง'?'<span class="muted">-</span>':d.score}</td>`;}).join('')}<td><b>${r.total}/${r.fullTotal}</b></td></tr>`).join('')
-  }</tbody></table>`;
-}
-function reportHeader(title){
-  const logo=SETTINGS.logoUrl||'';
-  return `<div style="text-align:center;margin-bottom:14px;font-family:'Sarabun',sans-serif">
-    ${logo?`<img src="${logo}" style="width:64px;height:64px;object-fit:contain">`:''}
-    <div style="font-size:18px;font-weight:700">${esc(SETTINGS.schoolName||'โรงเรียนสยามกลการ 4')}</div>
-    <div style="font-size:16px;font-weight:600">${esc(title)}</div>
-  </div>`;
-}
-function exportAttPDF(){
-  if(!SUM_DATA||!SUM_DATA.ok)return toast('เลือกรายวิชาก่อน');
-  const s=SUM_DATA.subject;
-  const wrap=document.createElement('div'); wrap.style.padding='20px';wrap.style.fontFamily="'Sarabun',sans-serif";
-  wrap.innerHTML=reportHeader('สรุปผลการเข้าเรียน')+
-    `<div style="font-size:14px;margin-bottom:10px">รหัสวิชา ${esc(s.code)} · ${esc(s.name)} · ชั้น ${esc(s.grade)} · หน่วยกิต ${s.credit}<br>ครูผู้สอน ${esc(s.teacher)} · ภาคเรียน ${esc(s.term)}/${esc(s.year)} · เกณฑ์ ${esc(s.criterion)}</div>`+
-    $('sumAttTable').innerHTML+
-    `<div style="margin-top:14px;font-size:12px;text-align:right">&lt;/&gt; พัฒนาระบบโดย Kru channarong mongkol 2569</div>`;
-  pdf(wrap,'สรุปเวลาเรียน_'+s.code+'.pdf');
-}
-function exportScorePDF(){
-  if(!SUM_SCORE||!SUM_SCORE.ok)return toast('เลือกรายวิชาก่อน');
-  const s=SUM_SCORE.subject;
-  const wrap=document.createElement('div');wrap.style.padding='20px';wrap.style.fontFamily="'Sarabun',sans-serif";
-  wrap.innerHTML=reportHeader('สรุปผลคะแนนภาระงาน')+
-    `<div style="font-size:14px;margin-bottom:10px">รหัสวิชา ${esc(s.code)} · ${esc(s.name)} · ชั้น ${esc(s.grade)}<br>ครูผู้สอน ${esc(s.teacher)} · ภาคเรียน ${esc(s.term)}/${esc(s.year)}</div>`+
-    $('sumScoreTable').innerHTML+
-    `<div style="margin-top:14px;font-size:12px;text-align:right">&lt;/&gt; พัฒนาระบบโดย Kru channarong mongkol 2569</div>`;
-  pdf(wrap,'สรุปคะแนน_'+s.code+'.pdf');
-}
-function pdf(el,name){
-  toast('กำลังสร้าง PDF…');
-  html2pdf().set({margin:8,filename:name,image:{type:'jpeg',quality:.95},html2canvas:{scale:2,useCORS:true},jsPDF:{orientation:'landscape',unit:'mm',format:'a4'}}).from(el).save();
-}
-
-/* ===================== SUBJECTS PAGE ===================== */
-function renderSubjList(){
-  $('subjListView').classList.remove('hidden'); $('subjDetailView').classList.add('hidden');
-  $('addSubjBtn').style.display=CURRENT_USER.role==='director'?'none':'';
-  const box=$('subjList');
-  box.innerHTML=SUBJECTS.length?SUBJECTS.map(s=>`
-    <div class="list-item"><div class="ti">
-      <div class="h">${esc(s.code)} · ${esc(s.name)}</div>
-      <div class="s">ชั้น ${esc(s.grade)} · ${s.credit} นก. · ${esc(s.teacher||'-')} · ${esc(s.term)}/${esc(s.year)} · ${esc(s.criterion)}</div>
-    </div>
-    <button class="btn-sky btn-sm" onclick="openSubjDetail('${esc(s.code)}')">จัดการ</button>
-    ${CURRENT_USER.role!=='director'?`<button class="btn-line btn-sm" onclick="openSubjForm('${esc(s.code)}')">แก้</button><button class="btn-del" onclick="delSubj(${s.row},'${esc(s.code)}')">ลบ</button>`:''}
-    </div>`).join(''):'<div class="empty">ยังไม่มีรายวิชา</div>';
-}
-function fillTeacherSelect(sel,val){
-  const teachers=USERS_CACHE.filter(u=>u.role==='teacher'||u.role==='admin');
-  sel.innerHTML='<option value="">— เลือกครู —</option>'+teachers.map(u=>`<option value="${esc(u.username)}" data-name="${esc(u.name)}" ${u.username===val?'selected':''}>${esc(u.name)} (${esc(u.username)})</option>`).join('');
-}
-async function ensureUsers(){if(!USERS_CACHE.length){try{USERS_CACHE=await api('getUsers',[]);}catch(e){}}}
-async function openSubjForm(code){
-  await ensureUsers();
-  $('sfGrade').innerHTML=GRADES.map(g=>`<option value="${g}">${g}</option>`).join('');
-  const s=code?SUBJECTS.find(x=>x.code===code):null;
-  $('subjFormTitle').textContent=s?'แก้ไขรายวิชา':'เพิ่มรายวิชา';
-  $('sfRow').value=s?s.row:''; $('sfCode').value=s?s.code:''; $('sfName').value=s?s.name:'';
-  $('sfCredit').value=s?s.credit:''; $('sfDept').value=s?s.dept:''; $('sfGrade').value=s?s.grade:GRADES[0];
-  fillTeacherSelect($('sfTeacher'),s?s.username:CURRENT_USER.username);
-  syncTeacherName();
-  $('sfYear').value=s?s.year:(SETTINGS.academicYear||''); $('sfTerm').value=s?s.term:(SETTINGS.term||'1');
-  updateSfHint();
-  $('sfGrade').onchange=updateSfHint;
-  openModal('subjMask');
-}
-function syncTeacherName(){const o=$('sfTeacher').selectedOptions[0];$('sfTeacherName').value=o?o.dataset.name||'':'';}
-function updateSfHint(){const g=$('sfGrade').value;const crit=/^ม\./.test(g)?'ภาคเรียน':'ปีการศึกษา';const c=Number($('sfCredit').value)||0;$('sfHint').textContent=`เกณฑ์ตัดสิน: ${crit} · ชั่วโมงรวมตามหลักสูตร: ${c*40} ชม. (อัตโนมัติ)`;}
-async function saveSubj(){
-  const code=$('sfCode').value.trim(),name=$('sfName').value.trim();
-  if(!code||!name)return toast('กรอกรหัสวิชาและชื่อวิชา');
-  const data={row:$('sfRow').value,code:code,name:name,credit:$('sfCredit').value,dept:$('sfDept').value.trim(),
-    grade:$('sfGrade').value,username:$('sfTeacher').value,teacher:$('sfTeacherName').value,
-    year:$('sfYear').value.trim(),term:$('sfTerm').value};
-  try{
-    const r=await api('saveSubject',[data]); if(!r.ok)return toast(r.message);
-    closeModal('subjMask'); toast('บันทึกรายวิชาแล้ว'); await reloadSubjects(); renderSubjList(); fillCheckSubjects(); fillSummarySubjects();
-  }catch(e){toast(e.message);}
-}
-async function delSubj(row,code){
-  if(!confirm('ลบรายวิชา '+code+' ?\n(ข้อมูลเช็กชื่อ/คะแนนที่บันทึกไว้จะยังอยู่ แต่จะไม่แสดงในรายการวิชา)'))return;
-  try{await api('deleteSubject',[row]);toast('ลบแล้ว');await reloadSubjects();renderSubjList();fillCheckSubjects();fillSummarySubjects();}catch(e){toast(e.message);}
-}
-async function reloadSubjects(){SUBJECTS=await api('getSubjects',[CURRENT_USER.username,CURRENT_USER.role])||[];}
-
-async function openSubjDetail(code){
-  SD_SUBJECT=SUBJECTS.find(s=>s.code===code); if(!SD_SUBJECT)return;
-  $('subjListView').classList.add('hidden'); $('subjDetailView').classList.remove('hidden');
-  $('sdTitle').textContent=SD_SUBJECT.code+' · '+SD_SUBJECT.name;
-  $('sdInfo').innerHTML=`
-    <div class="info-box"><div class="k">ชั้น</div><div class="v">${esc(SD_SUBJECT.grade)}</div></div>
-    <div class="info-box"><div class="k">หน่วยกิต</div><div class="v">${SD_SUBJECT.credit}</div></div>
-    <div class="info-box"><div class="k">ชม.รวม</div><div class="v">${SD_SUBJECT.totalHours}</div></div>
-    <div class="info-box"><div class="k">ครู</div><div class="v">${esc(SD_SUBJECT.teacher||'-')}</div></div>
-    <div class="info-box"><div class="k">ภาค/ปี</div><div class="v">${esc(SD_SUBJECT.term)}/${esc(SD_SUBJECT.year)}</div></div>
-    <div class="info-box"><div class="k">เกณฑ์</div><div class="v">${esc(SD_SUBJECT.criterion)}</div></div>`;
-  await Promise.all([renderSchedule(),renderCanceled(),renderAsgDetail()]);
-}
-function closeSubjDetail(){$('subjDetailView').classList.add('hidden');$('subjListView').classList.remove('hidden');SD_SUBJECT=null;}
-
-async function renderSchedule(){
-  const list=await api('getSchedule',[SD_SUBJECT.code]);
-  $('sdSchedule').innerHTML=list.length?list.map(r=>`
-    <div class="list-item"><div class="ti"><div class="h">${esc(r.day)} · คาบ ${esc(r.period)}</div><div class="s">${esc(r.start)} - ${esc(r.end)} น.</div></div>
-    <button class="btn-line btn-sm" onclick='editSched(${JSON.stringify(r)})'>แก้</button>
-    <button class="btn-del" onclick="delSched(${r.row})">ลบ</button></div>`).join(''):'<div class="empty">ยังไม่มีตารางคาบ</div>';
-}
-function openSchedForm(){
-  $('scRow').value='';$('scId').value='';
-  $('scDay').innerHTML=DAYS.map(d=>`<option value="${d}">${d}</option>`).join('');
-  $('scPeriod').innerHTML=PERIODS.map(p=>`<option value="${p.period}" data-s="${p.start}" data-e="${p.end}">คาบ ${p.period} (${p.start}-${p.end})</option>`).join('');
-  fillPeriodTime(); openModal('schedMask');
-}
-function editSched(r){
-  openSchedForm(); $('scRow').value=r.row;$('scId').value=r.id;
-  $('scDay').value=r.day;$('scPeriod').value=r.period;$('scStart').value=r.start;$('scEnd').value=r.end;
-}
-function fillPeriodTime(){const o=$('scPeriod').selectedOptions[0];if(o){$('scStart').value=o.dataset.s||'';$('scEnd').value=o.dataset.e||'';}}
-async function saveSched(){
-  const data={row:$('scRow').value,id:$('scId').value,code:SD_SUBJECT.code,day:$('scDay').value,period:$('scPeriod').value,
-    start:$('scStart').value.trim(),end:$('scEnd').value.trim(),grade:SD_SUBJECT.grade,teacher:SD_SUBJECT.teacher};
-  try{const r=await api('saveSchedule',[data]);if(!r.ok)return toast(r.message);closeModal('schedMask');toast('บันทึกแล้ว');renderSchedule();}catch(e){toast(e.message);}
-}
-async function delSched(row){if(!confirm('ลบคาบนี้?'))return;try{await api('deleteSchedule',[row]);renderSchedule();}catch(e){toast(e.message);}}
-
-async function renderCanceled(){
-  const list=await api('getCanceledPeriods',[SD_SUBJECT.code]);
-  $('sdCanceled').innerHTML=list.length?list.map(c=>`
-    <div class="list-item"><div class="ti"><div class="h">${thDate(c.date)} · คาบ ${esc(c.period)}</div><div class="s">${esc(c.reason)}</div></div>
-    <button class="btn-del" onclick="delCancel(${c.row})">ลบ</button></div>`).join(''):'<div class="empty">ไม่มีการงดคาบ</div>';
-}
-function openCancelForm(){
-  $('cpDate').value=new Date().toISOString().slice(0,10);
-  $('cpPeriod').innerHTML=PERIODS.map(p=>`<option value="${p.period}">คาบ ${p.period} (${p.start}-${p.end})</option>`).join('');
-  $('cpReason').value=''; openModal('cancelMask');
-}
-async function saveCancel(){
-  const data={date:$('cpDate').value,code:SD_SUBJECT.code,period:$('cpPeriod').value,reason:$('cpReason').value.trim()||'งดคาบ',recorder:CURRENT_USER.name};
-  if(!data.date)return toast('เลือกวันที่'); try{await api('cancelPeriod',[data]);closeModal('cancelMask');toast('บันทึกงดคาบแล้ว');renderCanceled();}catch(e){toast(e.message);}
-}
-async function delCancel(row){if(!confirm('ลบรายการงดคาบนี้?'))return;try{await api('deleteCanceledPeriod',[row]);renderCanceled();}catch(e){toast(e.message);}}
-
-async function renderAsgDetail(){
-  const list=await api('getAssignments',[SD_SUBJECT.code]);
-  SD_SUBJECT._asg=list;
-  $('sdAssignments').innerHTML=list.length?list.map(a=>`
-    <div class="list-item"><div class="ti"><div class="h">${esc(a.name)} · เต็ม ${a.fullScore}</div><div class="s">${a.dueTh?('กำหนดส่ง '+a.dueTh):'ไม่ระบุกำหนดส่ง'} · สถานะ ${esc(a.status)}</div></div>
-    <button class="btn-sky btn-sm" onclick="openScores('${esc(a.id)}','${esc(a.name)}',${a.fullScore})">คะแนน</button>
-    <button class="btn-del" onclick="delAsg(${a.row})">ลบ</button></div>`).join(''):'<div class="empty">ยังไม่มีชิ้นงาน</div>';
-}
-function openAsgFormDetail(){
-  $('naName').value='';$('naScore').value='';$('naDue').value='';
-  CUR_SUBJECT={code:SD_SUBJECT.code}; // ใช้ saveNewAsg ร่วม
-  const orig=window._afterAsg; openModal('asgMask');
-  window._afterAsg=()=>renderAsgDetail();
-}
-async function delAsg(row){if(!confirm('ลบชิ้นงานนี้? (คะแนนที่บันทึกไว้จะยังอยู่)'))return;try{await api('deleteAssignment',[row]);renderAsgDetail();}catch(e){toast(e.message);}}
-
-let SCORE_LIST=[];
-async function openScores(id,name,full){
-  try{
-    const [scores,unsub]=await Promise.all([api('getAssignmentScores',[id]),api('getUnsubmittedStudents',[id])]);
-    $('scoreTitle').textContent='คะแนน · '+name+' (เต็ม '+full+')';
-    let html=scores.map(r=>`<div class="stu-row"><div class="nm">${esc(r.name)}</div>
-      <input type="number" value="${r.score}" data-row="${r.row}" data-full="${full}" style="max-width:70px" onchange="saveScoreRow(this)">
-      <select data-row="${r.row}" onchange="saveScoreStatus(this)">${['ส่งแล้ว','ส่งช้า','ไม่ส่ง'].map(o=>`<option ${o===r.status?'selected':''}>${o}</option>`).join('')}</select></div>`).join('');
-    if(unsub.ok&&unsub.students.length){
-      html+=`<div class="muted" style="margin:10px 0 6px">ยังไม่ส่ง (${unsub.students.length} คน) — บันทึกผ่านปุ่ม "ดึงรายชื่อ" ในหน้าเช็ก หรือทำเครื่องหมายไม่ส่ง</div>`;
-      html+=unsub.students.map(s=>`<div class="stu-row" style="opacity:.8"><div class="nm">${esc(s.name)}</div><span class="badge b-absent">ยังไม่ส่ง</span></div>`).join('');
-    }
-    $('scoreList').innerHTML=html||'<div class="empty">ยังไม่มีคะแนน</div>';
-    openModal('scoreMask');
-  }catch(e){toast(e.message);}
-}
-async function saveScoreRow(inp){
-  let v=Number(inp.value)||0; const full=Number(inp.dataset.full)||0;
-  if(v<0)v=0; if(full&&v>full)v=full; inp.value=v;
-  try{await api('updateScore',[inp.dataset.row,v,null,null]);toast('บันทึกคะแนน');}catch(e){toast(e.message);}
-}
-async function saveScoreStatus(sel){try{await api('updateScore',[sel.dataset.row,null,sel.value,null]);}catch(e){toast(e.message);}}
-
-/* override saveNewAsg to refresh detail when in subject detail */
-const _saveNewAsg=saveNewAsg;
-saveNewAsg=async function(){
-  const name=$('naName').value.trim(),score=$('naScore').value;
-  if(!name)return toast('กรอกชื่อชิ้นงาน'); if(score===''||isNaN(score))return toast('กรอกคะแนนเต็ม');
-  const code=(SD_SUBJECT&&!$('pg-subjects').classList.contains('on')?CUR_SUBJECT.code:(SD_SUBJECT?SD_SUBJECT.code:CUR_SUBJECT.code));
-  try{
-    const r=await api('saveAssignment',[{code:code,name:name,fullScore:Number(score),due:$('naDue').value,creator:CURRENT_USER.name}]);
-    closeModal('asgMask'); toast('เพิ่มชิ้นงานแล้ว');
-    if($('pg-subjects').classList.contains('on')&&SD_SUBJECT){renderAsgDetail();}
-    else{await loadAssignments(code);$('asgSel').value=r.id;renderAsgHist();}
-  }catch(e){toast(e.message);}
+const MENU = {
+  dashboard:{icon:'speedometer2', title:'แดชบอร์ด', roles:['admin','teacher','director']},
+  checkin:{icon:'qr-code-scan', title:'เช็กชื่อ', roles:['admin','teacher']},
+  manual:{icon:'clipboard-check', title:'บันทึกขาด/ลา/มาสาย', roles:['admin','teacher']},
+  studentlist:{icon:'list-ul', title:'รายชื่อนักเรียน', roles:['admin','teacher','director']},
+  students:{icon:'people-fill', title:'จัดการข้อมูลนักเรียน', roles:['admin']},
+  cards:{icon:'card-heading', title:'พิมพ์บัตรนักเรียน', roles:['admin']},
+  activities:{icon:'calendar-event', title:'กำหนดกิจกรรม', roles:['admin']},
+  reports:{icon:'file-earmark-bar-graph', title:'รายงาน', roles:['admin','teacher','director']},
+  users:{icon:'person-gear', title:'จัดการผู้ใช้งาน', roles:['admin']},
+  settings:{icon:'gear-fill', title:'ตั้งค่าปีการศึกษา', roles:['admin']},
+  cardrequest:{icon:'card-heading', title:'คำร้องขอบัตรใหม่', roles:['teacher','admin']},
+  cardadmin:{icon:'card-checklist', title:'จัดการคำร้องบัตร', roles:['admin']}
 };
 
-/* ===================== CARDS PAGE ===================== */
-function fillCardGrades(){
-  const grades=[...new Set(STUDENTS_CACHE.length?STUDENTS_CACHE.map(s=>s.grade):[])];
-  ensureStudents().then(()=>{
-    const gs=[...new Set(STUDENTS_CACHE.map(s=>s.grade).filter(Boolean))].sort((a,b)=>GRADES.indexOf(a)-GRADES.indexOf(b));
-    $('cardGrade').innerHTML='<option value="">— เลือกชั้น —</option>'+gs.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+/* ====== จัดรูปแบบวันที่/เวลาแบบไทย ====== */
+const THMONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+// แปลงวันที่ -> "6 มิ.ย. 2569"
+function fmtThaiDate(v){
+  if(!v) return '';
+  let d;
+  if(v instanceof Date){ d = v; }
+  else{
+    const s = String(v).trim();
+    const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    d = m ? new Date(+m[1], +m[2]-1, +m[3]) : new Date(s);
+  }
+  if(isNaN(d.getTime())) return String(v);
+  return d.getDate() + ' ' + THMONTHS[d.getMonth()] + ' ' + (d.getFullYear()+543);
+}
+
+// แปลงเวลา -> "15.09 น." (รองรับทั้ง 08:15, 08.15 และ "Sat Dec 30 1899 15:09:58...")
+function fmtThaiTime(v){
+  if(!v) return '';
+  const s = String(v).trim();
+  const m = s.match(/(\d{1,2})[:.](\d{2})/);
+  if(m) return m[1].padStart(2,'0') + '.' + m[2] + ' น.';
+  const d = new Date(s);
+  if(!isNaN(d.getTime()))
+    return String(d.getHours()).padStart(2,'0') + '.' + String(d.getMinutes()).padStart(2,'0') + ' น.';
+  return s;
+}
+
+/* ====== เรียก API ผ่าน fetch ====== */
+function api(fn){
+  const args = Array.prototype.slice.call(arguments,1);
+  return fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({fn:fn, args:args})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    if(!res.ok) throw new Error(res.error || 'เกิดข้อผิดพลาด');
+    return res.data;
   });
 }
-async function ensureStudents(){if(!STUDENTS_CACHE.length){STUDENTS_CACHE=await api('getStudents',[])||[];}}
-function setCodeType(c){CARD_CODETYPE=c;document.querySelectorAll('#codeTypeToggle button').forEach(b=>b.classList.toggle('on',b.dataset.c===c));renderCards();}
-async function renderCards(){
-  await ensureStudents();
-  const grade=$('cardGrade').value, color=$('cardColor').value;
-  const wrap=$('cardsWrap');
-  if(!grade){wrap.innerHTML='<div class="empty">เลือกชั้นเพื่อสร้างบัตร</div>';return;}
-  const list=STUDENTS_CACHE.filter(s=>s.grade===grade).sort((a,b)=>(Number(a.no)||0)-(Number(b.no)||0));
-  if(!list.length){wrap.innerHTML='<div class="empty">ไม่มีนักเรียนในชั้นนี้</div>';return;}
-  const logo=SETTINGS.logoUrl||'https://img1.pic.in.th/images/-7b8aca0fdb73ae1d.png';
-  wrap.innerHTML=list.map((s,i)=>`
-    <div class="idcard">
-      <div class="hd" style="background:${color}">
-        <img src="${logo}" onerror="this.style.display='none'">
-        <div class="sn">${esc(SETTINGS.schoolName||'โรงเรียนสยามกลการ 4')}<br><small>บัตรประจำตัวนักเรียน</small></div>
-      </div>
-      <div class="bd">
-        <img class="ph" src="${s.photo||''}" onerror="this.style.visibility='hidden'">
-        <div class="det">
-          <div><span class="lb">ชื่อ-สกุล</span><br><b>${esc(s.prefix||'')}${esc(s.name)}</b></div>
-          <div style="margin-top:3px"><span class="lb">รหัส</span> ${esc(s.code)} &nbsp; <span class="lb">เลขที่</span> ${esc(s.no||'-')}</div>
-          <div><span class="lb">ชั้น</span> ${esc(s.grade)}</div>
-        </div>
-      </div>
-      <div class="bc" id="bc-${i}"></div>
-    </div>`).join('');
-  // generate barcodes / qr after DOM
-  list.forEach((s,i)=>{
-    const box=$('bc-'+i); if(!box)return;
-    if(CARD_CODETYPE==='barcode'){
-      const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); box.appendChild(svg);
-      try{JsBarcode(svg,String(s.code),{format:'CODE128',displayValue:true,fontSize:13,height:34,margin:0});}catch(e){box.textContent=s.code;}
-    }else{
-      const q=document.createElement('div');q.className='qrbox';box.appendChild(q);
-      try{new QRCode(q,{text:String(s.code),width:54,height:54,correctLevel:QRCode.CorrectLevel.M});}catch(e){box.textContent=s.code;}
+
+function showLoader(s){document.getElementById('loader').style.display = s?'flex':'none';}
+function toast(icon,title){
+  Swal.fire({toast:true,position:'top-end',icon:icon,title:title,showConfirmButton:false,timer:2200,timerProgressBar:true});
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('show');}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+function beep(success){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type='square';
+    osc.frequency.value = success?2000:280;
+    g.gain.setValueAtTime(0.15,ctx.currentTime);
+    osc.start();
+    setTimeout(function(){osc.stop();ctx.close();}, success?110:380);
+  }catch(e){}
+}
+
+function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if(!u||!p){toast('warning','กรอกข้อมูลให้ครบ');return;}
+  showLoader(true);
+  api('login',u,p).then(function(res){
+    showLoader(false);
+    if(!res.ok){Swal.fire('เข้าสู่ระบบไม่สำเร็จ',res.message,'error');return;}
+
+    currentUser = res.user;
+    saveSession(currentUser);
+    startApp();
+    startApp();
+  }).catch(function(e){showLoader(false);Swal.fire('ผิดพลาด','เชื่อมต่อ API ไม่ได้: '+e.message,'error');});
+}
+function logout(){
+  Swal.fire({title:'ออกจากระบบ?',icon:'question',showCancelButton:true,
+    confirmButtonText:'ออกจากระบบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){ if(r.isConfirmed){ stopScanner(); clearSession(); location.reload(); }});
+}
+
+function startApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  document.getElementById('userName').innerText = currentUser.name;
+  const roleTH = {admin:'ผู้ดูแลระบบ',teacher:'ครูเวร',director:'ผู้บริหาร'};
+  document.getElementById('userRole').innerText = roleTH[currentUser.role]||currentUser.role;
+
+  let html='';
+  Object.keys(MENU).forEach(function(k){
+    if(MENU[k].roles.indexOf(currentUser.role)!==-1){
+      html += '<div class="nav-link-side" data-page="'+k+'" onclick="navigate(\''+k+'\')">'
+            + '<i class="bi bi-'+MENU[k].icon+'"></i> '+MENU[k].title+'</div>';
     }
   });
-}
-function exportCardsPDF(){
-  if(!$('cardGrade').value)return toast('เลือกชั้นก่อน');
-  const clone=$('printArea').cloneNode(true);
-  clone.style.padding='10px';
-  pdf2(clone,'บัตรนักเรียน_'+$('cardGrade').value+'.pdf');
-}
-function pdf2(el,name){toast('กำลังสร้าง PDF…');html2pdf().set({margin:6,filename:name,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{orientation:'portrait',unit:'mm',format:'a4'}}).from(el).save();}
+  document.getElementById('sideNav').innerHTML = html;
 
-/* ===================== STUDENTS PAGE ===================== */
-async function renderStudents(){
-  await ensureStudents();
-  const gf=$('stuFilterGrade');
-  if(gf.options.length<=1){const gs=GRADES;gf.innerHTML='<option value="">ทุกชั้น</option>'+gs.map(g=>`<option value="${g}">${g}</option>`).join('');}
-  const grade=gf.value, q=$('stuSearch').value.trim().toLowerCase();
-  let list=STUDENTS_CACHE.slice();
-  if(grade)list=list.filter(s=>s.grade===grade);
-  if(q)list=list.filter(s=>(s.name||'').toLowerCase().includes(q)||String(s.code).includes(q));
-  list.sort((a,b)=>{if(a.grade!==b.grade)return GRADES.indexOf(a.grade)-GRADES.indexOf(b.grade);return(Number(a.no)||0)-(Number(b.no)||0);});
-  $('studentList').innerHTML=list.length?list.map(s=>`
-    <div class="list-item">
-      <div class="av" style="width:40px;height:40px;border-radius:10px;background:var(--lav);overflow:hidden;flex-shrink:0">${s.photo?`<img src="${s.photo}" style="width:100%;height:100%;object-fit:cover">`:''}</div>
-      <div class="ti"><div class="h">${esc(s.prefix||'')}${esc(s.name)}</div><div class="s">รหัส ${esc(s.code)} · เลขที่ ${esc(s.no||'-')} · ชั้น ${esc(s.grade)} ${s.hasId?'· 🔐':'· <span style="color:#cc5a72">ยังไม่มีเลขบัตร</span>'}</div></div>
-      <button class="btn-line btn-sm" onclick='editStu(${JSON.stringify(s)})'>แก้</button>
-      <button class="btn-del" onclick="delStu(${s.row},'${esc(s.name)}')">ลบ</button>
-    </div>`).join(''):'<div class="empty">ไม่มีนักเรียน</div>';
+  api('getSettings').then(function(s){ settings = s; });
+
+  const first = currentUser.role==='teacher' ? 'checkin' : 'dashboard';
+  navigate(first);
 }
-function openStudentForm(){
-  $('stGrade').innerHTML=GRADES.map(g=>`<option value="${g}">${g}</option>`).join('');
-  $('stuFormTitle').textContent='เพิ่มนักเรียน';
-  ['stRow','stCode','stNo','stPrefix','stName','stId'].forEach(id=>$(id).value='');
-  $('stPhoto').value='';$('stPhotoMsg').textContent='';CARD_PHOTO_BASE=null;$('stuStoredPhoto']='';
-  window._stuPhoto=''; openModal('stuMask');
+
+function navigate(page){
+  stopScanner();
+  document.querySelectorAll('.nav-link-side').forEach(function(el){
+    el.classList.toggle('active', el.dataset.page===page);
+  });
+  document.getElementById('pageTitle').innerText = MENU[page].title;
+  document.getElementById('sidebar').classList.remove('show');
+  ({
+  dashboard: renderDashboard,
+  checkin: renderCheckin,
+  manual: renderManual,
+  studentlist: renderStudentList,
+  students: renderStudents,
+  cards: renderCards,
+  activities: renderActivities,
+  reports: renderReports,
+  users: renderUsers,
+  settings: renderSettings,
+  cardrequest: renderCardRequest,
+  cardadmin: renderCardAdmin
+  })[page]();
 }
-function editStu(s){
-  openStudentForm(); $('stuFormTitle').textContent='แก้ไขนักเรียน';
-  $('stRow').value=s.row;$('stCode').value=s.code;$('stNo').value=s.no;$('stPrefix').value=s.prefix;$('stName').value=s.name;$('stGrade').value=s.grade;
-  window._stuPhoto=s.photo||'';
+
+  
+/* ============ DASHBOARD ============ */
+function renderDashboard(){
+  const c = document.getElementById('content');
+  c.innerHTML =
+    '<div class="card mb-3"><div class="card-body d-flex flex-wrap align-items-center gap-2">'
+    +'<label class="fw-bold mb-0"><i class="bi bi-calendar-event"></i> กิจกรรม:</label>'
+    +'<select id="dashActivity" class="form-select" style="max-width:340px;" onchange="loadDashboard()"></select>'
+    +'</div></div><div id="dashBody"><div class="text-center py-5"><div class="spinner-border text-primary"></div></div></div>';
+  api('getActivities').then(function(list){
+    activitiesCache=list;
+    const open=list.filter(function(a){return a.status==='เปิด';});
+    const sel=document.getElementById('dashActivity');
+    sel.innerHTML = open.map(function(a){return '<option>'+esc(a.name)+'</option>';}).join('')
+      || '<option>เข้าแถวหน้าเสาธง</option>';
+    loadDashboard();
+  });
 }
-$('stPhoto')&&$('stPhoto').addEventListener('change',function(){
-  const f=this.files[0]; if(!f)return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    $('stPhotoMsg').textContent='กำลังอัปโหลด…';
-    try{const r=await api('uploadPhoto',[e.target.result,f.name]);if(r.ok){window._stuPhoto=r.url;$('stPhotoMsg').textContent='อัปโหลดรูปแล้ว ✓';}else $('stPhotoMsg').textContent='อัปโหลดไม่ได้';}catch(err){$('stPhotoMsg').textContent='ผิดพลาด: '+err.message;}
+function loadDashboard(){
+  const sel=document.getElementById('dashActivity');
+  const activity = sel ? sel.value : 'เข้าแถวหน้าเสาธง';
+  const c = document.getElementById('dashBody');
+  c.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+  api('getDashboardData',activity).then(function(d){
+    let gradeRows='';
+    Object.keys(d.byGrade).sort().forEach(function(g){
+      const v=d.byGrade[g];
+      const pct = v.total? Math.min(100, Math.round(v.checked/v.total*100)):0;
+      gradeRows += '<tr><td>'+esc(g)+'</td><td class="text-center">'+v.total+'</td>'
+        +'<td class="text-center">'+v.checked+'</td>'
+        +'<td><div class="progress" style="height:18px;"><div class="progress-bar bg-success" style="width:'+pct+'%">'+pct+'%</div></div></td></tr>';
+    });
+    c.innerHTML =
+    '<div class="row g-3 mb-4">'
+    + statCard('bg-total','people-fill','นักเรียนทั้งหมด',d.total)
+    + statCard('bg-present','check-circle-fill','ปกติวันนี้',d.present)
+    + statCard('bg-late','clock-fill','มาสาย',d.late)
+    + statCard('bg-absent','x-circle-fill','ขาด/ยังไม่มา',d.absent)
+    + '</div>'
+    + '<div class="row g-3">'
+    + '<div class="col-lg-7"><div class="card h-100"><div class="card-header"><i class="bi bi-graph-up"></i> สถิติ 7 วันย้อนหลัง</div>'
+    + '<div class="card-body"><canvas id="trendChart" height="120"></canvas></div></div></div>'
+    + '<div class="col-lg-5"><div class="card h-100"><div class="card-header"><i class="bi bi-pie-chart"></i> สัดส่วนวันนี้</div>'
+    + '<div class="card-body"><canvas id="pieChart" height="120"></canvas></div></div></div>'
+    + '<div class="col-12"><div class="card"><div class="card-header"><i class="bi bi-list-check"></i> สรุปการเช็กชื่อรายชั้น (วันนี้)</div>'
+    + '<div class="card-body table-responsive"><table class="table table-hover"><thead><tr><th>ชั้น</th><th class="text-center">ทั้งหมด</th><th class="text-center">เช็กแล้ว</th><th>ความคืบหน้า</th></tr></thead><tbody>'
+    + (gradeRows||'<tr><td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูล</td></tr>')
+    + '</tbody></table></div></div></div></div>';
+
+    new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:d.trend.labels,
+      datasets:[{label:'ปกติ',data:d.trend.present,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.1)',tension:.3,fill:true},
+        {label:'มาสาย',data:d.trend.late,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',tension:.3,fill:true}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+    new Chart(document.getElementById('pieChart'),{type:'doughnut',
+      data:{labels:['ปกติ','มาสาย','ขาด/ยังไม่มา'],
+        datasets:[{data:[d.present,d.late,d.absent],backgroundColor:['#16a34a','#f59e0b','#ef4444']}]},
+      options:{plugins:{legend:{position:'bottom'}}}});
+  }).catch(function(e){ c.innerHTML='<div class="alert alert-danger">โหลดข้อมูลไม่ได้: '+esc(e.message)+'</div>'; });
+}
+function statCard(bg,icon,label,val){
+  return '<div class="col-6 col-lg-3"><div class="card stat-card '+bg+'"><div class="card-body">'
+    +'<i class="bi bi-'+icon+' icon"></i><div style="opacity:.9;font-size:.9rem;">'+label+'</div>'
+    +'<h2>'+val+'</h2></div></div></div>';
+}
+
+/* ============ CHECK-IN (กล้องสด) ============ */
+function renderCheckin(){
+  document.getElementById('content').innerHTML =
+  '<div class="card mb-3"><div class="card-body d-flex flex-wrap align-items-center gap-2">'
+  +'<label class="fw-bold mb-0"><i class="bi bi-calendar-event"></i> กิจกรรม:</label>'
+  +'<select id="checkinActivity" class="form-select" style="max-width:340px;" onchange="onActivityChange()"></select>'
+  +'<span class="text-muted small" id="actHint"></span></div></div>'
+  + '<div class="row g-3">'
+  + '<div class="col-lg-5"><div class="card"><div class="card-header"><i class="bi bi-qr-code-scan"></i> สแกน QR Code / Barcode</div>'
+  + '<div class="card-body text-center">'
+  + '<div id="reader"></div>'
+  + '<div class="d-grid gap-2 d-md-flex justify-content-center mt-3">'
+  + '<button class="btn btn-success" id="btnStart" onclick="startScanner()"><i class="bi bi-camera-video"></i> เปิดกล้อง</button>'
+  + '<button class="btn btn-danger" id="btnStop" onclick="stopScanner()" disabled><i class="bi bi-camera-video-off"></i> ปิดกล้อง</button>'
+  + '</div><hr>'
+  + '<label class="form-label fw-bold">ป้อนรหัสนักเรียนด้วยตนเอง</label>'
+  + '<div class="input-group"><input type="text" id="manualCode" class="form-control form-control-lg" placeholder="รหัสนักเรียน" '
+  + 'onkeydown="if(event.key===\'Enter\')doManual()"><button class="btn btn-primary" onclick="doManual()"><i class="bi bi-check-lg"></i> เช็กชื่อ</button></div>'
+  + '</div></div></div>'
+  + '<div class="col-lg-7"><div class="card"><div class="card-header d-flex justify-content-between align-items-center">'
+  + '<span><i class="bi bi-clock-history"></i> ผลการเช็กชื่อล่าสุด (Real-time)</span>'
+  + '<span class="badge bg-primary" id="todayCount">0 คน</span></div>'
+  + '<div class="card-body table-responsive" style="max-height:520px;overflow:auto;">'
+  + '<table class="table table-sm table-hover"><thead class="table-light" style="position:sticky;top:0;"><tr>'
+  + '<th>เวลา</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th></tr></thead>'
+  + '<tbody id="liveTable"></tbody></table></div></div></div></div>';
+
+  api('getActivities').then(function(list){
+    activitiesCache=list;
+    const open=list.filter(function(a){return a.status==='เปิด';});
+    const sel=document.getElementById('checkinActivity');
+    sel.innerHTML = open.map(function(a){return '<option>'+esc(a.name)+'</option>';}).join('')
+      || '<option>เข้าแถวหน้าเสาธง</option>';
+    currentCheckinActivity = sel.value;
+    onActivityChange();
+  });
+}
+/* ============ บันทึกสถานะด้วยตนเอง (ลา/มาสาย/ขาดเรียน/อื่นๆ) ============ */
+let unrecordedCache = [];
+
+function renderManual(){
+  document.getElementById('content').innerHTML =
+  '<div class="card mb-3"><div class="card-header"><i class="bi bi-clipboard-check"></i> '
+  +'บันทึกสถานะนักเรียนที่ยังไม่ได้เช็ก (ลา / มาสาย / ขาดเรียน / อื่นๆ)</div>'
+  +'<div class="card-body"><div class="row g-2 align-items-end">'
+  +'<div class="col-md-4"><label class="form-label">กิจกรรม</label><select id="mActivity" class="form-select"></select></div>'
+  +'<div class="col-md-3"><label class="form-label">วันที่</label><input type="date" id="mDate" class="form-control"></div>'
+  +'<div class="col-md-3"><label class="form-label">ชั้น</label><select id="mGrade" class="form-select"><option value="">ทุกชั้น</option></select></div>'
+  +'<div class="col-md-2 d-grid"><button class="btn btn-primary" onclick="loadUnrecorded()"><i class="bi bi-arrow-repeat"></i> ดึงรายชื่อ</button></div>'
+  +'</div><p class="text-muted small mb-0 mt-2"><i class="bi bi-info-circle"></i> ระบบจะแสดงเฉพาะนักเรียนที่<b>ยังไม่ถูกสแกน/บันทึก</b>ในกิจกรรมและวันที่เลือก จึงไม่ซ้ำกับการเช็กชื่อปกติ</p>'
+  +'</div></div><div id="mResult"></div>';
+
+  document.getElementById('mDate').value = new Date().toISOString().slice(0,10);
+
+  api('getActivities').then(function(list){
+    activitiesCache=list;
+    const open=list.filter(function(a){return a.status==='เปิด';});
+    document.getElementById('mActivity').innerHTML =
+      open.map(function(a){return '<option>'+esc(a.name)+'</option>';}).join('')
+      || '<option>เข้าแถวหน้าเสาธง</option>';
+  });
+  api('getStudents').then(function(list){
+    const grades=[...new Set(list.map(function(s){return s.grade;}).filter(Boolean))].sort();
+    document.getElementById('mGrade').innerHTML='<option value="">ทุกชั้น</option>'
+      + grades.map(function(g){return '<option>'+esc(g)+'</option>';}).join('');
+  });
+}
+
+function loadUnrecorded(){
+  const activity=document.getElementById('mActivity').value;
+  const date=document.getElementById('mDate').value;
+  const grade=document.getElementById('mGrade').value;
+  if(!activity){ toast('warning','เลือกกิจกรรมก่อน'); return; }
+  showLoader(true);
+  api('getUnrecordedStudents',activity,date,grade).then(function(res){
+    showLoader(false);
+    unrecordedCache = res.students || [];
+    renderUnrecordedTable();
+  }).catch(function(e){ showLoader(false); Swal.fire('ผิดพลาด',e.message,'error'); });
+}
+
+function renderUnrecordedTable(){
+  const box=document.getElementById('mResult');
+  if(!unrecordedCache.length){
+    box.innerHTML='<div class="alert alert-success"><i class="bi bi-check-circle"></i> '
+      +'นักเรียนทุกคนถูกบันทึกในกิจกรรมนี้แล้ว ไม่มีรายชื่อตกค้าง</div>';
+    return;
+  }
+  const opts=['ขาดเรียน','ลา','มาสาย','อื่นๆ'];
+  const rows=unrecordedCache.map(function(s){
+    const sel='<select class="form-select form-select-sm m-status" data-code="'+esc(s.code)+'">'
+      +opts.map(function(o){return '<option'+(o==='ขาดเรียน'?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';
+    return '<tr><td><input type="checkbox" class="m-check" value="'+esc(s.code)+'" onchange="updateMSelCount()"></td>'
+      +'<td>'+esc(s.code)+'</td><td>'+esc(s.no)+'</td>'
+      +'<td>'+esc((s.prefix||'')+s.name)+'</td><td>'+esc(s.grade)+'</td>'
+      +'<td>'+sel+'</td>'
+      +'<td><input class="form-control form-control-sm m-note" data-code="'+esc(s.code)+'" placeholder="หมายเหตุ (ถ้ามี)"></td></tr>';
+  }).join('');
+
+  box.innerHTML=
+  '<div class="card"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">'
+  +'<span><i class="bi bi-list-check"></i> รายชื่อที่ยังไม่ถูกบันทึก <span class="badge bg-danger">'+unrecordedCache.length+' คน</span></span>'
+  +'<div class="d-flex flex-wrap align-items-center gap-2">'
+  +'<span class="small text-muted">ตั้งสถานะให้ที่เลือก:</span>'
+  +'<select id="bulkStatus" class="form-select form-select-sm" style="max-width:130px;">'
+  + ['ขาดเรียน','ลา','มาสาย','อื่นๆ'].map(function(o){return '<option>'+o+'</option>';}).join('')
+  +'</select>'
+  +'<button class="btn btn-outline-secondary btn-sm" onclick="applyBulkStatus()"><i class="bi bi-check2-all"></i> ตั้งให้ที่เลือก</button>'
+  +'<button class="btn btn-success btn-sm" onclick="saveManualSelected()"><i class="bi bi-save"></i> บันทึกที่เลือก (<span id="mSelCount">0</span>)</button>'
+  +'</div></div>'
+  +'<div class="card-body table-responsive"><table class="table table-hover table-sm align-middle">'
+  +'<thead class="table-light"><tr><th><input type="checkbox" id="mCheckAll" onclick="mToggleAll(this)"></th>'
+  +'<th>รหัส</th><th>เลขที่</th><th>ชื่อ-สกุล</th><th>ชั้น</th>'
+  +'<th style="min-width:120px;">สถานะ</th><th style="min-width:160px;">หมายเหตุ</th></tr></thead>'
+  +'<tbody>'+rows+'</tbody></table></div></div>';
+  updateMSelCount();
+}
+
+function mToggleAll(master){
+  document.querySelectorAll('.m-check').forEach(function(cb){ cb.checked=master.checked; });
+  updateMSelCount();
+}
+function updateMSelCount(){
+  const n=document.querySelectorAll('.m-check:checked').length;
+  const el=document.getElementById('mSelCount'); if(el) el.innerText=n;
+}
+
+// ตั้งสถานะเดียวกันให้ทุกแถวที่ติ๊กเลือก
+function applyBulkStatus(){
+  const status=document.getElementById('bulkStatus').value;
+  const checked=[...document.querySelectorAll('.m-check:checked')].map(function(c){return c.value;});
+  if(!checked.length){ toast('warning','ยังไม่ได้เลือกรายการ'); return; }
+  document.querySelectorAll('.m-status').forEach(function(sel){
+    if(checked.indexOf(sel.dataset.code)!==-1) sel.value=status;
+  });
+  toast('success','ตั้งสถานะ "'+status+'" ให้ '+checked.length+' รายการแล้ว');
+}
+
+// บันทึกเฉพาะแถวที่ติ๊กเลือก
+function saveManualSelected(){
+  const checked=[...document.querySelectorAll('.m-check:checked')];
+  if(!checked.length){ toast('warning','ยังไม่ได้เลือกนักเรียน'); return; }
+  const items=checked.map(function(cb){
+    const code=cb.value;
+    const statusSel=document.querySelector('.m-status[data-code="'+code+'"]');
+    const noteInp=document.querySelector('.m-note[data-code="'+code+'"]');
+    return { code:code,
+             status:statusSel?statusSel.value:'ขาดเรียน',
+             note:noteInp?noteInp.value.trim():'' };
+  });
+  const activity=document.getElementById('mActivity').value;
+  const date=document.getElementById('mDate').value;
+  Swal.fire({title:'บันทึกสถานะ?',
+    html:'ต้องการบันทึกสถานะให้นักเรียน <b>'+items.length+'</b> คน<br>'
+        +'กิจกรรม <b>'+esc(activity)+'</b> · วันที่ <b>'+fmtThaiDate(date)+'</b> ใช่หรือไม่',
+    icon:'question',showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-save"></i> บันทึก',cancelButtonText:'ยกเลิก',confirmButtonColor:'#1e3a8a'})
+  .then(function(r){
+    if(!r.isConfirmed) return;
+    showLoader(true);
+    api('recordManualStatus',items,activity,date,currentUser.name).then(function(res){
+      showLoader(false);
+      Swal.fire('บันทึกเสร็จสิ้น','บันทึก '+res.added+' คน · ข้าม(ซ้ำ) '+res.skipped+' คน','success');
+      loadUnrecorded(); // รีเฟรชรายชื่อที่เหลือ
+    }).catch(function(e){ showLoader(false); Swal.fire('ผิดพลาด',e.message,'error'); });
+  });
+}
+  
+function startScanner(){
+  if(location.protocol!=='https:' && location.hostname!=='localhost'){
+    Swal.fire('ใช้กล้องไม่ได้','กล้องทำงานได้เฉพาะการเชื่อมต่อแบบ HTTPS เท่านั้น','warning');
+    return;
+  }
+  document.getElementById('btnStart').disabled=true;
+  document.getElementById('btnStop').disabled=false;
+
+  qrScanner = new Html5Qrcode('reader');
+
+  const config = {
+    fps: 18,
+    qrbox: { width: 220, height: 220 },
+    aspectRatio: 1.0
   };
-  reader.readAsDataURL(f);
+
+  // เลือก "กล้องหลัง" จากรายการกล้องจริงด้วย deviceId (แม่นกว่า facingMode บนมือถือ)
+  Html5Qrcode.getCameras().then(function(devices){
+    if(!devices || devices.length === 0){
+      throw { name: 'NotFoundError' };
+    }
+
+    // หากล้องหลังจากชื่อ (back / rear / environment / หลัง)
+    var back = devices.find(function(d){
+      var label = (d.label || '').toLowerCase();
+      return label.indexOf('back') !== -1
+          || label.indexOf('rear') !== -1
+          || label.indexOf('environment') !== -1
+          || label.indexOf('หลัง') !== -1;
+    });
+
+    // ถ้าหาไม่เจอ ใช้กล้องตัวสุดท้าย (ส่วนใหญ่คือกล้องหลังบนมือถือ)
+    var cameraId = back ? back.id : devices[devices.length - 1].id;
+
+    return qrScanner.start(cameraId, config, onScan, function(){});
+  })
+  .catch(function(err){
+    handleCamError(err);
+  });
+}
+function stopScanner(){
+  if(qrScanner){
+    qrScanner.stop().then(function(){ try{qrScanner.clear();}catch(e){} qrScanner=null; }).catch(function(){ qrScanner=null; });
+  }
+  const b1=document.getElementById('btnStart'), b2=document.getElementById('btnStop');
+  if(b1)b1.disabled=false; if(b2)b2.disabled=true;
+}
+function handleCamError(err){
+  const name = (err && err.name) ? err.name : String(err);
+  document.getElementById('btnStart').disabled=false;
+  document.getElementById('btnStop').disabled=true;
+  if(qrScanner){ try{ qrScanner.clear(); }catch(e){} qrScanner=null; }
+  let msg;
+  if(name==='NotAllowedError' || name==='SecurityError'){
+    msg='เบราว์เซอร์ปฏิเสธการเข้าถึงกล้อง<br><br>กดไอคอนกล้อง/แม่กุญแจที่แถบที่อยู่ แล้วเลือก "อนุญาต" จากนั้นรีโหลดหน้า';
+  }else if(name==='NotFoundError' || name==='DevicesNotFoundError'){
+    msg='ไม่พบกล้องบนอุปกรณ์นี้ กรุณาใช้ช่องป้อนรหัสด้วยตนเองแทน';
+  }else if(name==='NotReadableError' || name==='TrackStartError'){
+    msg='กล้องถูกโปรแกรมอื่นใช้งานอยู่ กรุณาปิดแอปที่ใช้กล้องแล้วลองใหม่';
+  }else{
+    msg='เปิดกล้องไม่ได้: '+name;
+  }
+  Swal.fire({icon:'error', title:'เปิดกล้องไม่ได้', html:msg});
+}
+function onScan(text){
+  const now=Date.now();
+  if(text===lastScan.code && now-lastScan.t<3000) return;
+  lastScan={code:text,t:now};
+  submitCheckin(text);
+}
+let lastRequestTime = 0;
+
+function doManual(){
+  const now = Date.now();
+  if(now - lastRequestTime < 1500) return;
+  lastRequestTime = now;
+
+  const v = document.getElementById('manualCode').value.trim();
+  if(!v){toast('warning','กรอกรหัสนักเรียน');return;}
+
+  submitCheckin(v);
+  document.getElementById('manualCode').value='';
+  document.getElementById('manualCode').focus();
+}
+function successPopup(student){
+  Swal.fire({
+    icon: 'success',
+    title: 'บันทึกข้อมูลเรียบร้อย',
+    html:
+      'รหัสนักเรียน: <b>'+student.code+'</b><br>'+
+      'ชื่อ-สกุล: <b>'+student.name+'</b><br>'+
+      'ชั้น: <b>'+student.grade+'</b>',
+    position: 'center',
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true
+  });
+}
+  let lastRequest = 0;
+function submitCheckin(code){
+
+  const now = Date.now();
+  if(now - lastRequest < 1500) return; // กันยิงซ้ำ
+  lastRequest = now;
+
+  api('checkIn',String(code).trim(),currentUser.name,currentCheckinActivity)
+  .then(function(res){
+    if(res.ok){
+      beep(true);
+      successPopup(res.student);
+      prependLiveRow(res);
+    }
+    else if(res.type==='duplicate'){
+      beep(false);
+      toast('info','⚠️ '+res.message);
+    }
+    else{
+      beep(false);
+      toast('error','❌ '+res.message);
+    }
+  })
+  .catch(function(e){
+    beep(false);
+    toast('error',e.message);
+  });
+}
+function prependLiveRow(res){
+  const tb=document.getElementById('liveTable'); if(!tb) return;
+  const empty=tb.querySelector('td[colspan]'); if(empty) tb.innerHTML='';
+  const badge = res.status==='ปกติ'?'badge-present':'badge-late';
+  const tr=document.createElement('tr'); tr.className='scan-result-row';
+  tr.innerHTML='<td>'+fmtThaiTime(res.time)+'</td><td>'+esc(res.student.code)+'</td>'
+    +'<td>'+esc(res.student.name)+'</td><td>'+esc(res.student.grade)+'</td>'
+    +'<td><span class="badge '+badge+'">'+res.status+'</span></td>';
+  tb.insertBefore(tr, tb.firstChild);
+  const cnt=document.getElementById('todayCount');
+  if(cnt) cnt.innerText = tb.querySelectorAll('tr').length+' คน';
+}
+function refreshLive(flash){
+  api('getTodayAttendance',currentCheckinActivity).then(function(rows){
+    const cnt=document.getElementById('todayCount'); if(cnt) cnt.innerText = rows.length+' คน';
+    const tb=document.getElementById('liveTable');
+    if(!tb)return;
+    tb.innerHTML = rows.map(function(r,i){
+      const badge = r.status==='ปกติ'?'badge-present':'badge-late';
+      return '<tr class="'+(flash&&i===0?'scan-result-row':'')+'"><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.code)+'</td>'
+        +'<td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td>'
+        +'<td><span class="badge '+badge+'">'+r.status+'</span></td></tr>';
+    }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ยังไม่มีการเช็กชื่อกิจกรรมนี้วันนี้</td></tr>';
+  });
+}
+
+function showStudentLookup(){
+  let ov=document.getElementById('lookupOverlay');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='lookupOverlay';
+    ov.style.cssText='position:fixed;inset:0;background:#f1f5f9;z-index:3000;overflow:auto;padding:20px;';
+    document.body.appendChild(ov);
+  }
+  const thisMonth=new Date().toISOString().slice(0,7);
+  ov.innerHTML=
+   '<div style="max-width:760px;margin:0 auto;">'
+   +'<div class="text-center mb-3">'
+     +'<img src="'+LOGO+'" style="height:90px;" onerror="this.style.display=\'none\'">'
+     +'<h5 class="mt-2 mb-0">โรงเรียนสยามกลการ 4 | สพป.มุกดาหาร</h5>'
+   +'</div>'
+   +'<div class="d-flex justify-content-between align-items-center mb-3">'
+     +'<h4 class="mb-0"><i class="bi bi-search"></i> ตรวจสอบการเข้าร่วมกิจกรรม</h4>'
+     +'<button class="btn btn-primary" onclick="closeStudentLookup()"><i class="bi bi-box-arrow-in-right"></i> ลงชื่อเข้าใช้งาน</button>'
+   +'</div>'
+   +'<div class="card mb-3"><div class="card-body">'
+     +'<label class="form-label">รหัสประจำตัวนักเรียน + เลขบัตรประชาชน</label>'
+     +'<div class="d-flex gap-2 flex-wrap">'
+       +'<input id="lk_code" class="form-control" style="max-width:200px;" placeholder="รหัสนักเรียน" onkeydown="if(event.key===\'Enter\')runLookup()">'
+       +'<input id="lk_idcard" class="form-control" style="max-width:200px;" maxlength="13" inputmode="numeric" placeholder="เลขบัตรประชาชน 13 หลัก" onkeydown="if(event.key===\'Enter\')runLookup()">'
+       +'<select id="lk_period" class="form-select" style="max-width:160px;" onchange="lookupPeriodChange()">'
+         +'<option value="today">รายวัน (วันนี้)</option>'
+         +'<option value="month">รายเดือน</option>'
+         +'<option value="term">ภาคเรียนปัจจุบัน</option>'
+       +'</select>'
+       +'<input type="month" id="lk_month" class="form-control" style="max-width:170px;display:none;" value="'+thisMonth+'">'
+       +'<button class="btn btn-success" onclick="runLookup()"><i class="bi bi-search"></i> ค้นหา</button>'
+     +'</div>'
+   +'</div></div>'
+   +'<div id="lk_result"></div>'
+   +'<footer class="text-center text-muted mt-4 pb-3" style="font-size:.85rem;">'
+     +'พัฒนาโดย นายชาญณรงค์ มงคล · โรงเรียนสยามกลการ 4 สพป.มุกดาหาร'
+   +'</footer>'
+   +'</div>';
+  document.getElementById('lk_code').focus();
+}
+function closeStudentLookup(){
+  const ov=document.getElementById('lookupOverlay');
+  if(ov) ov.remove();
+}
+function lookupPeriodChange(){
+  const p=document.getElementById('lk_period').value;
+  document.getElementById('lk_month').style.display = (p==='month')?'':'none';
+}
+function runLookup(){
+  const code=document.getElementById('lk_code').value.trim();
+  const idcard=document.getElementById('lk_idcard').value.trim();
+  const period=document.getElementById('lk_period').value;
+  const month=document.getElementById('lk_month').value;
+  const box=document.getElementById('lk_result');
+  if(!code||!idcard){ box.innerHTML='<div class="alert alert-warning">กรุณากรอกรหัสนักเรียนและเลขบัตรประชาชน</div>'; return; }
+  box.innerHTML='<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+  api('getStudentLookup',code,idcard,period,month).then(function(res){
+    if(!res.ok){ box.innerHTML='<div class="alert alert-danger">'+esc(res.message)+'</div>'; return; }
+    const s=res.student;
+    const photo = s.photo
+      ? '<img src="'+esc(s.photo)+'" style="width:80px;height:80px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML=\'<div style=&quot;width:80px;height:80px;border-radius:10px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;&quot;><i class=&quot;bi bi-person fs-2 text-muted&quot;></i></div>\'">'
+      : '<div style="width:80px;height:80px;border-radius:10px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;"><i class="bi bi-person fs-2 text-muted"></i></div>';
+    const periodLabel = period==='today'?'วันนี้':(period==='month'?'เดือน '+month:'ภาคเรียน '+res.term+'/'+res.year);
+    const rows = res.rows.length
+      ? res.rows.map(function(r){
+          const badge=r.status==='ปกติ'?'badge-present':(r.status==='มาสาย'?'badge-late':'badge-absent');
+          return '<tr><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.activity)+'</td><td><span class="badge '+badge+'">'+esc(r.status)+'</span></td></tr>';
+        }).join('')
+      : '<tr><td colspan="4" class="text-center text-muted py-3">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>';
+    box.innerHTML=
+     '<div class="card mb-3"><div class="card-body d-flex align-items-center gap-3">'
+       +photo
+       +'<div><h5 class="mb-1">'+esc(s.prefix)+esc(s.name)+'</h5>'
+       +'<div class="text-muted">รหัส '+esc(s.code)+' · ชั้น '+esc(s.grade)+'</div></div>'
+     +'</div></div>'
+     +'<div class="row g-2 mb-3 text-center">'
+       +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">ปกติ</div><h4 class="text-success mb-0">'+res.present+'</h4></div></div></div>'
+       +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">มาสาย</div><h4 class="text-warning mb-0">'+res.late+'</h4></div></div></div>'
+       +'<div class="col-4"><div class="card"><div class="card-body py-2"><div class="text-muted small">รวมบันทึก</div><h4 class="mb-0">'+res.total+'</h4></div></div></div>'
+     +'</div>'
+     +'<div class="card"><div class="card-header"><i class="bi bi-list-ul"></i> รายละเอียด ('+periodLabel+')</div>'
+     +'<div class="card-body table-responsive"><table class="table table-hover mb-0">'
+     +'<thead><tr><th>วันที่</th><th>เวลา</th><th>กิจกรรม</th><th>สถานะ</th></tr></thead>'
+     +'<tbody>'+rows+'</tbody></table></div></div>';
+  }).catch(function(e){ box.innerHTML='<div class="alert alert-danger">เกิดข้อผิดพลาด: '+esc(e.message)+'</div>'; });
+}
+
+
+
+  let selectedStudent = null;
+/* ============ คำร้องขอบัตรใหม่ (ครู) ============ */
+const CARD_STATUS = ['รับคำร้อง','อยู่ระหว่างดำเนินการ','ติดต่อขอรับบัตร','ดำเนินการเรียบร้อย'];
+const CARD_ITEMS = [
+  {key:'card',    label:'ออกบัตรใหม่ (ชำรุด/หาย)', price:10},
+  {key:'lanyard', label:'สายคล้องคอ',              price:30},
+  {key:'cover',   label:'ซองใส',                   price:10}
+];
+let cardSelectedStudent = null;
+
+function cardStatusBadge(st){
+  const m={'รับคำร้อง':'bg-secondary','อยู่ระหว่างดำเนินการ':'bg-warning text-dark',
+           'ติดต่อขอรับบัตร':'bg-info text-dark','ดำเนินการเรียบร้อย':'bg-success'};
+  return '<span class="badge '+(m[st]||'bg-secondary')+'">'+esc(st)+'</span>';
+}
+
+function renderCardRequest(){
+  document.getElementById('content').innerHTML =
+  '<div class="row g-3">'
+  +'<div class="col-lg-6"><div class="card"><div class="card-header"><i class="bi bi-card-heading"></i> ส่งคำร้องขอทำบัตรใหม่</div>'
+  +'<div class="card-body">'
+  +'<label class="form-label">ค้นหานักเรียน (รหัส / ชื่อ)</label>'
+  +'<div class="input-group mb-3">'
+  +'<input id="crSearch" class="form-control" placeholder="พิมพ์รหัสหรือชื่อ" onkeydown="if(event.key===\'Enter\')crFindStudent()">'
+  +'<button class="btn btn-primary" onclick="crFindStudent()"><i class="bi bi-search"></i> ค้นหา</button>'
+  +'</div><div id="crStudentCard"></div>'
+  +'</div></div></div>'
+  +'<div class="col-lg-6"><div class="card"><div class="card-header"><i class="bi bi-clock-history"></i> ติดตามสถานะคำร้อง</div>'
+  +'<div class="card-body">'
+  +'<label class="form-label">ค้นหาด้วยรหัสนักเรียน</label>'
+  +'<div class="input-group mb-3">'
+  +'<input id="crTrackCode" class="form-control" placeholder="รหัสนักเรียน" onkeydown="if(event.key===\'Enter\')crTrack()">'
+  +'<button class="btn btn-success" onclick="crTrack()"><i class="bi bi-search"></i> ตรวจสอบ</button>'
+  +'</div><div id="crTrackResult"></div>'
+  +'</div></div></div>'
+  +'</div>';
+}
+
+function crFindStudent(){
+  const q=document.getElementById('crSearch').value.trim();
+  if(!q){toast('warning','กรอกคำค้นหา');return;}
+  showLoader(true);
+  api('getStudents').then(function(list){
+    showLoader(false);
+    const ql=q.toLowerCase();
+    const s=list.find(function(x){
+      return String(x.code).toLowerCase()===ql
+          || ((x.prefix||'')+x.name).toLowerCase().indexOf(ql)!==-1;
+    });
+    const box=document.getElementById('crStudentCard');
+    if(!s){ cardSelectedStudent=null; box.innerHTML='<div class="alert alert-danger">ไม่พบนักเรียน</div>'; return; }
+    cardSelectedStudent=s;
+    const photo = s.photo
+      ? '<img src="'+esc(s.photo)+'" class="photo">'
+      : '<div class="photo d-inline-flex align-items-center justify-content-center"><i class="bi bi-person" style="font-size:2rem;color:#94a3b8;"></i></div>';
+    box.innerHTML=
+      '<div class="id-card" style="width:100%;display:block;margin:0;">'
+      +'<div class="head"><img src="'+LOGO+'" onerror="this.style.display=\'none\'">'
+      +'<div style="font-weight:600;">โรงเรียนสยามกลการ 4</div></div>'
+      +'<div class="body">'+photo
+      +'<div class="fw-bold mt-2">'+esc((s.prefix||'')+s.name)+'</div>'
+      +'<div class="text-muted small">รหัส '+esc(s.code)+'</div>'
+      +'<div class="text-muted small">ชั้น '+esc(s.grade)+' เลขที่ '+esc(s.no)+'</div>'
+      +'</div></div>'
+      +'<hr><h6 class="fw-bold">รายการที่ขอ</h6>'
+      + CARD_ITEMS.map(function(it,i){
+          return '<div class="form-check"><input class="form-check-input cr-item" type="checkbox" value="'+i+'" id="cr_item_'+i+'">'
+            +'<label class="form-check-label" for="cr_item_'+i+'">'+esc(it.label)+' ('+it.price+' บาท)</label></div>';
+        }).join('')
+      +'<input id="crNote" class="form-control form-control-sm mt-2" placeholder="หมายเหตุ (ถ้ามี)">'
+      +'<button class="btn btn-success w-100 mt-3" onclick="crSubmit()"><i class="bi bi-send"></i> ส่งคำร้อง</button>';
+  }).catch(function(e){showLoader(false);toast('error',e.message);});
+}
+
+function crSubmit(){
+  if(!cardSelectedStudent){toast('warning','ยังไม่ได้เลือกนักเรียน');return;}
+  const items=[...document.querySelectorAll('.cr-item:checked')].map(function(cb){return CARD_ITEMS[Number(cb.value)];});
+  if(!items.length){toast('warning','เลือกอย่างน้อย 1 รายการ');return;}
+  const note=(document.getElementById('crNote')||{}).value||'';
+  showLoader(true);
+  api('createCardRequest',{
+    student:cardSelectedStudent, items:items, note:note.trim(), requester:currentUser.name
+  }).then(function(res){
+    showLoader(false);
+    if(res&&res.ok){
+      Swal.fire('ส่งคำร้องแล้ว','คำร้องเลขที่ '+res.id,'success');
+      cardSelectedStudent=null;
+      document.getElementById('crStudentCard').innerHTML='';
+      document.getElementById('crSearch').value='';
+    }else{
+      Swal.fire('ผิดพลาด',(res&&res.message)||'ส่งคำร้องไม่สำเร็จ','error');
+    }
+  }).catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');});
+}
+
+function crTrack(){
+  const code=document.getElementById('crTrackCode').value.trim();
+  if(!code){toast('warning','กรอกรหัสนักเรียน');return;}
+  const box=document.getElementById('crTrackResult');
+  box.innerHTML='<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
+  api('searchCardRequests',code).then(function(list){
+    if(!list.length){box.innerHTML='<div class="alert alert-warning">ไม่พบคำร้องของรหัสนี้</div>';return;}
+    box.innerHTML='<div class="table-responsive"><table class="table table-sm align-middle">'
+      +'<thead><tr><th>วันที่</th><th>รายการ</th><th>สถานะ</th></tr></thead><tbody>'
+      + list.map(function(r){
+          return '<tr><td>'+fmtThaiDate(r.date)+'<br><small class="text-muted">'+fmtThaiTime(r.time)+'</small></td>'
+            +'<td>'+esc(r.items)+'</td><td>'+cardStatusBadge(r.status)+'</td></tr>';
+        }).join('')
+      +'</tbody></table></div>';
+  }).catch(function(e){box.innerHTML='<div class="alert alert-danger">'+esc(e.message)+'</div>';});
+}
+
+/* ============ จัดการคำร้องบัตร (แอดมิน) ============ */
+function renderCardAdmin(){
+  document.getElementById('content').innerHTML =
+  '<div class="card mb-3"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">'
+  +'<span><i class="bi bi-card-checklist"></i> จัดการคำร้องขอบัตร</span>'
+  +'<div class="d-flex gap-2 flex-wrap">'
+  +'<select id="caFilter" class="form-select form-select-sm" style="max-width:190px;" onchange="loadCardAdmin()">'
+  +'<option value="">ทุกสถานะ</option>'+ CARD_STATUS.map(function(s){return '<option>'+s+'</option>';}).join('')+'</select>'
+  +'<input id="caSearch" class="form-control form-control-sm" style="max-width:190px;" placeholder="ค้นหา รหัส/ชื่อ" oninput="loadCardAdmin()">'
+  +'</div></div>'
+  +'<div class="card-body" id="caBody"><div class="text-center py-4"><div class="spinner-border text-primary"></div></div></div></div>'
+  +'<div class="card"><div class="card-header"><i class="bi bi-bar-chart"></i> สถิตินักเรียนที่ขอออกบัตรบ่อย</div>'
+  +'<div class="card-body table-responsive" id="caStats"></div></div>';
+  loadCardAdmin(); loadCardStats();
+}
+
+function loadCardAdmin(){
+  const status=document.getElementById('caFilter').value;
+  const q=(document.getElementById('caSearch').value||'').trim().toLowerCase();
+  api('getCardRequests',status).then(function(list){
+    let rows=list;
+    if(q) rows=rows.filter(function(r){return (r.code+' '+(r.prefix||'')+r.name).toLowerCase().indexOf(q)!==-1;});
+    const body=document.getElementById('caBody');
+    if(!rows.length){body.innerHTML='<div class="text-center text-muted py-3">ไม่มีคำร้อง</div>';return;}
+    body.innerHTML='<div class="table-responsive"><table class="table table-hover align-middle">'
+      +'<thead class="table-light"><tr><th>วันที่</th><th>รูป</th><th>นักเรียน</th><th>ชั้น/เลขที่</th><th>รายการ</th><th>ผู้แจ้ง</th><th>สถานะ</th><th>เปลี่ยนสถานะ</th></tr></thead><tbody>'
+      + rows.map(function(r){
+          const img=r.photo?'<img src="'+esc(r.photo)+'" class="student-photo">':'<div class="student-photo d-flex align-items-center justify-content-center"><i class="bi bi-person"></i></div>';
+          const sel='<select class="form-select form-select-sm" onchange="caUpdate(\''+esc(r.id)+'\',this.value)">'
+            + CARD_STATUS.map(function(s){return '<option'+(s===r.status?' selected':'')+'>'+s+'</option>';}).join('')+'</select>';
+          return '<tr><td>'+fmtThaiDate(r.date)+'<br><small class="text-muted">'+fmtThaiTime(r.time)+'</small></td>'
+            +'<td>'+img+'</td>'
+            +'<td>'+esc((r.prefix||'')+r.name)+'<br><small class="text-muted">'+esc(r.code)+'</small></td>'
+            +'<td>'+esc(r.grade)+' / '+esc(r.no)+'</td>'
+            +'<td>'+esc(r.items)+'</td><td>'+esc(r.requester)+'</td>'
+            +'<td>'+cardStatusBadge(r.status)+'</td><td style="min-width:170px;">'+sel+'</td></tr>';
+        }).join('')
+      +'</tbody></table></div>';
+  });
+}
+function caUpdate(id,status){
+  api('updateCardRequestStatus',id,status).then(function(){
+    toast('success','อัปเดตสถานะแล้ว'); loadCardAdmin(); loadCardStats();
+  }).catch(function(e){toast('error',e.message);});
+}
+function loadCardStats(){
+  api('getCardRequestStats').then(function(list){
+    const box=document.getElementById('caStats');
+    if(!list.length){box.innerHTML='<div class="text-muted">ยังไม่มีข้อมูล</div>';return;}
+    box.innerHTML='<table class="table table-sm align-middle"><thead><tr><th>#</th><th>นักเรียน</th><th>ชั้น</th><th class="text-center">จำนวนครั้ง</th><th>ขอล่าสุด</th></tr></thead><tbody>'
+      + list.map(function(r,i){
+          return '<tr><td>'+(i+1)+'</td><td>'+esc(r.name)+'<br><small class="text-muted">'+esc(r.code)+'</small></td>'
+            +'<td>'+esc(r.grade)+'</td><td class="text-center"><span class="badge bg-primary">'+r.count+' ครั้ง</span></td>'
+            +'<td>'+esc(r.last)+'</td></tr>';
+        }).join('')
+      +'</tbody></table>';
+  });
+}
+
+
+
+/* ============ STUDENTS ============ */
+let studentsCache=[];
+let studentSelected = new Set(); // เก็บเลขแถวที่ติ๊กเลือกไว้ (คงค่าข้ามหน้า DataTables)
+function renderStudents(){
+  document.getElementById('content').innerHTML =
+  '<div class="card"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">'
+  + '<span><i class="bi bi-people-fill"></i> ข้อมูลนักเรียน</span>'
+  + '<div class="d-flex gap-2 flex-wrap">'
+  + '<button class="btn btn-success btn-sm" onclick="studentModal()"><i class="bi bi-plus-lg"></i> เพิ่มนักเรียน</button>'
+  + '<label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> นำเข้า Excel/CSV'
+  + '<input type="file" hidden accept=".xlsx,.xls,.csv" onchange="importExcel(event)"></label>'
+  + '<button class="btn btn-outline-secondary btn-sm" onclick="downloadTemplate()"><i class="bi bi-download"></i> เทมเพลต</button>'
+  + '</div></div>'
+  // แถบเครื่องมือลบ
+  + '<div class="card-body border-bottom py-2"><div class="d-flex flex-wrap align-items-center gap-2">'
+  + '<span class="fw-bold text-danger me-1"><i class="bi bi-trash"></i> ลบข้อมูล:</span>'
+  + '<button class="btn btn-danger btn-sm" onclick="askDeleteSelected()"><i class="bi bi-check2-square"></i> ลบที่เลือก (<span id="selCount">0</span>)</button>'
+  + '<select id="delGrade" class="form-select form-select-sm" style="max-width:170px;"><option value="">-- เลือกชั้น --</option></select>'
+  + '<button class="btn btn-danger btn-sm" onclick="askDeleteGrade()"><i class="bi bi-people"></i> ลบทั้งห้อง</button>'
+  + '<button class="btn btn-danger btn-sm ms-auto" onclick="askDeleteAll()"><i class="bi bi-exclamation-octagon"></i> ลบทั้งหมด</button>'
+  + '</div></div>'
+  + '<div class="card-body table-responsive"><table id="studentTable" class="table table-hover" style="width:100%">'
+  + '<thead><tr><th><input type="checkbox" id="checkAllStudents" onclick="toggleAllStudents(this)"></th>'
+  + '<th>รูป</th><th>รหัสนักเรียน</th><th>เลขที่</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>จัดการ</th></tr></thead>'
+  + '<tbody></tbody></table></div></div>';
+  loadStudents();
+}
+function loadStudents(){
+  showLoader(true);
+  studentSelected = new Set();
+  api('getStudents').then(function(list){
+    studentsCache=list;
+    // เติมตัวเลือกชั้นสำหรับ "ลบทั้งห้อง"
+    const grades=[...new Set(list.map(function(s){return s.grade;}).filter(Boolean))].sort();
+    const dg=document.getElementById('delGrade');
+    if(dg) dg.innerHTML='<option value="">-- เลือกชั้น --</option>'
+      + grades.map(function(g){return '<option>'+esc(g)+'</option>';}).join('');
+
+    if($.fn.dataTable.isDataTable('#studentTable')) $('#studentTable').DataTable().destroy();
+    const tbody = list.map(function(s){
+      const img = s.photo? '<img src="'+esc(s.photo)+'" class="student-photo">' : '<div class="student-photo d-flex align-items-center justify-content-center"><i class="bi bi-person"></i></div>';
+      return '<tr><td><input type="checkbox" class="rowCheck" value="'+s.row+'" onclick="onRowCheck(this)"></td>'
+        +'<td>'+img+'</td><td>'+esc(s.code)+'</td><td>'+esc(s.no)+'</td>'
+        +'<td>'+esc((s.prefix||'')+s.name)+'</td><td>'+esc(s.grade)+'</td>'
+        +'<td><button class="btn btn-sm btn-warning" onclick="editStudent('+s.row+')"><i class="bi bi-pencil"></i></button> '
+        +'<button class="btn btn-sm btn-danger" onclick="delStudent('+s.row+',\''+esc(s.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+    }).join('');
+    $('#studentTable tbody').html(tbody);
+    const dt = $('#studentTable').DataTable({language:thaiDT(),order:[[2,'asc']],pageLength:25,
+      columnDefs:[{orderable:false,targets:[0,1,6]}]});
+    dt.on('draw', restoreChecks); // เปลี่ยนหน้า/ค้นหาแล้วคืนสถานะติ๊กที่เลือกไว้
+    updateSelCount();
+    showLoader(false);
+  });
+}
+
+/* ---------- ตัวช่วยจัดการ checkbox เลือกหลายคน ---------- */
+function onRowCheck(cb){
+  const row=Number(cb.value);
+  cb.checked ? studentSelected.add(row) : studentSelected.delete(row);
+  updateSelCount(); syncHeaderCheck();
+}
+function toggleAllStudents(master){
+  document.querySelectorAll('#studentTable tbody .rowCheck').forEach(function(cb){
+    cb.checked=master.checked;
+    const row=Number(cb.value);
+    master.checked ? studentSelected.add(row) : studentSelected.delete(row);
+  });
+  updateSelCount();
+}
+function restoreChecks(){
+  document.querySelectorAll('#studentTable tbody .rowCheck').forEach(function(cb){
+    cb.checked=studentSelected.has(Number(cb.value));
+  });
+  syncHeaderCheck();
+}
+function syncHeaderCheck(){
+  const boxes=document.querySelectorAll('#studentTable tbody .rowCheck');
+  const master=document.getElementById('checkAllStudents');
+  if(!master) return;
+  const checked=[...boxes].filter(function(b){return b.checked;}).length;
+  master.checked = boxes.length>0 && checked===boxes.length;
+  master.indeterminate = checked>0 && checked<boxes.length;
+}
+function updateSelCount(){
+  const el=document.getElementById('selCount');
+  if(el) el.innerText=studentSelected.size;
+}
+let pendingPhoto = null; // เก็บรูปที่ย่อแล้ว รออัปโหลดตอนกดบันทึก
+
+function studentModal(s){
+  s = s || {row:'',code:'',no:'',prefix:'เด็กชาย',name:'',grade:'',photo:'',hasId:false};
+  pendingPhoto = null;
+  Swal.fire({
+    title: s.row?'แก้ไขนักเรียน':'เพิ่มนักเรียน',
+    width:600,
+    showLoaderOnConfirm:true,
+    html:
+    '<div class="text-start"><div class="row g-2">'
+    +'<div class="col-8"><label class="form-label">รหัสนักเรียน* <small class="text-muted">(ห้ามซ้ำ)</small></label><input id="f_code" class="form-control" value="'+esc(s.code)+'"></div>'
+    +'<div class="col-4"><label class="form-label">เลขที่</label><input id="f_no" class="form-control" value="'+esc(s.no)+'"></div>'
+    +'<div class="col-4"><label class="form-label">คำนำหน้า</label><select id="f_prefix" class="form-select">'
+      +['เด็กชาย','เด็กหญิง','นาย','นางสาว'].map(function(p){return '<option '+(s.prefix===p?'selected':'')+'>'+p+'</option>';}).join('')+'</select></div>'
+    +'<div class="col-8"><label class="form-label">ชื่อ-สกุล*</label><input id="f_name" class="form-control" value="'+esc(s.name)+'"></div>'
+    +'<div class="col-12"><label class="form-label">ชั้น</label><input id="f_grade" class="form-control" placeholder="เช่น ป.6" value="'+esc(s.grade)+'"></div>'
+    +'<div class="col-12"><label class="form-label">เลขบัตรประชาชน '
+      +(s.hasId?'<small class="text-success">(มีข้อมูลแล้ว · เว้นว่างหากไม่เปลี่ยน)</small>'
+              :'<small class="text-muted">(ใช้ยืนยันตัวตนตอนนักเรียน/ผู้ปกครองค้นหา)</small>')
+      +'</label><input id="f_idcard" class="form-control" maxlength="13" inputmode="numeric" placeholder="13 หลัก"></div>'
+    +'<div class="col-12"><label class="form-label">รูปนักเรียน</label>'
+      +'<input id="f_photo" class="form-control mb-1" value="'+esc(s.photo)+'" placeholder="วาง URL รูป (หรือเลือกไฟล์ด้านล่าง)">'
+      +'<input type="file" id="f_photofile" class="form-control form-control-sm" accept="image/*" onchange="pickStudentPhoto(event)">'
+      +'<div id="f_photo_note" class="small text-muted mt-1"></div>'
+      +'<img id="f_photo_preview" src="'+esc(s.photo)+'" style="max-height:120px;margin-top:8px;border-radius:8px;border:1px solid #e2e8f0;'+(s.photo?'':'display:none;')+'"></div>'
+    +'</div></div>',
+    showCancelButton:true, confirmButtonText:'<i class="bi bi-save"></i> บันทึกข้อมูล',
+    cancelButtonText:'ยกเลิก', confirmButtonColor:'#1e3a8a',
+    allowOutsideClick:function(){ return !Swal.isLoading(); },
+    didOpen:function(){ window._editRow=s.row; },
+    preConfirm:function(){
+      const code=val('f_code'), name=val('f_name');
+      if(!code||!name){ Swal.showValidationMessage('กรอกรหัสนักเรียนและชื่อ'); return false; }
+      const d={row:window._editRow, code:code, no:val('f_no'), prefix:val('f_prefix'),
+        name:name, grade:val('f_grade'), photo:val('f_photo'), idcard:val('f_idcard')};
+      // ถ้ามีรูปใหม่ที่เลือกไว้ อัปโหลดก่อน แล้วค่อยบันทึก (รวมเป็นขั้นตอนเดียว)
+      if(pendingPhoto){
+        return api('uploadPhoto', pendingPhoto.dataUrl, pendingPhoto.name).then(function(res){
+          if(res.ok && res.url){ d.photo=res.url; return d; }
+          throw new Error(res.message || 'ไม่ได้รับลิงก์รูป');
+        }).catch(function(err){
+          Swal.showValidationMessage('อัปโหลดรูปไม่สำเร็จ: '+err.message);
+          return false;
+        });
+      }
+      return d;
+    }
+  }).then(function(r){
+    if(r.isConfirmed && r.value){
+      showLoader(true);
+      api('saveStudent',r.value).then(function(res){
+        showLoader(false);
+        if(res.ok){toast('success','บันทึกแล้ว');loadStudents();}
+        else Swal.fire('ผิดพลาด',res.message,'error');
+      }).catch(function(err){ showLoader(false); Swal.fire('ผิดพลาด',err.message,'error'); });
+    }
+  });
+}
+function val(id){return document.getElementById(id).value.trim();}
+// เลือกรูป: ย่อขนาดในเครื่อง + โชว์พรีวิว (ยังไม่อัปโหลด รออัปตอนกดบันทึก)
+// เลือกรูป: ย่อขนาดในเครื่อง + โชว์พรีวิว (ไม่เรียก toast เพราะจะไปปิดกล่อง Swal ที่เปิดอยู่)
+function pickStudentPhoto(e){
+  const file=e.target.files[0]; if(!file)return;
+  const note=document.getElementById('f_photo_note');
+  if(!/^image\//.test(file.type)){ if(note){note.textContent='⚠️ กรุณาเลือกไฟล์รูปภาพ';note.className='text-danger small';} return; }
+  const reader=new FileReader();
+  reader.onload=function(){
+    const img=new Image();
+    img.onload=function(){
+      const max=400; let w=img.width, h=img.height;
+      if(w>max){ h=Math.round(h*max/w); w=max; }
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl=cv.toDataURL('image/jpeg',0.85);
+      pendingPhoto={ dataUrl:dataUrl, name:(file.name.replace(/\.[^.]+$/,'')||'photo')+'.jpg' };
+      const prev=document.getElementById('f_photo_preview');
+      if(prev){ prev.src=dataUrl; prev.style.display='block'; }
+      const f=document.getElementById('f_photo'); if(f) f.value='';
+      if(note){ note.textContent='✓ เลือกรูปแล้ว · กดบันทึกเพื่ออัปโหลด'; note.className='text-success small'; }
+    };
+    img.onerror=function(){ if(note){note.textContent='⚠️ อ่านไฟล์รูปไม่ได้';note.className='text-danger small';} };
+    img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function editStudent(row){ studentModal(studentsCache.find(function(s){return s.row===row;})); }
+// 1) ลบรายบุคคล
+function delStudent(row,name){
+  Swal.fire({title:'ลบนักเรียน?',
+    html:'ต้องการลบ <b>'+esc(name)+'</b> ใช่หรือไม่<br><small class="text-muted">การลบไม่สามารถย้อนกลับได้</small>',
+    icon:'warning',showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-trash"></i> ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('deleteStudent',row).then(function(){showLoader(false);toast('success','ลบแล้ว');loadStudents();})
+      .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
+}
+
+// 2) ลบหลายคนที่เลือก
+function askDeleteSelected(){
+  const rows=[...studentSelected];
+  if(!rows.length){ toast('warning','ยังไม่ได้เลือกนักเรียน'); return; }
+  Swal.fire({title:'ลบนักเรียนที่เลือก?',
+    html:'ต้องการลบนักเรียนที่เลือกจำนวน <b>'+rows.length+'</b> คน ใช่หรือไม่<br><small class="text-muted">การลบไม่สามารถย้อนกลับได้</small>',
+    icon:'warning',showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-trash"></i> ลบ '+rows.length+' คน',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('deleteStudents',rows).then(function(res){showLoader(false);
+      toast('success','ลบแล้ว '+(res.deleted||rows.length)+' คน'); loadStudents();})
+      .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
+}
+
+// 3) ลบทั้งห้องเรียน
+function askDeleteGrade(){
+  const grade=document.getElementById('delGrade').value;
+  if(!grade){ toast('warning','กรุณาเลือกชั้นก่อน'); return; }
+  const count=studentsCache.filter(function(s){return s.grade===grade;}).length;
+  Swal.fire({title:'ลบทั้งห้อง?',
+    html:'ต้องการลบนักเรียนชั้น <b>'+esc(grade)+'</b> ทั้งหมด <b>'+count+'</b> คน ใช่หรือไม่<br><small class="text-muted">การลบไม่สามารถย้อนกลับได้</small>',
+    icon:'warning',showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-trash"></i> ลบทั้งห้อง',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('deleteStudentsByGrade',grade).then(function(res){showLoader(false);
+      toast('success','ลบแล้ว '+(res.deleted||count)+' คน'); loadStudents();})
+      .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
+}
+
+// 4) ลบทั้งหมด (ต้องพิมพ์ยืนยัน)
+function askDeleteAll(){
+  const total=studentsCache.length;
+  if(!total){ toast('warning','ไม่มีข้อมูลให้ลบ'); return; }
+  Swal.fire({title:'⚠️ ลบข้อมูลนักเรียนทั้งหมด',
+    html:'กำลังจะลบนักเรียน <b>ทั้งหมด '+total+' คน</b><br><span class="text-danger">การกระทำนี้ไม่สามารถย้อนกลับได้</span><br><br>พิมพ์คำว่า <b>ลบทั้งหมด</b> เพื่อยืนยัน',
+    icon:'warning',input:'text',inputPlaceholder:'พิมพ์: ลบทั้งหมด',
+    showCancelButton:true,confirmButtonText:'<i class="bi bi-trash"></i> ลบทั้งหมด',
+    cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626',
+    preConfirm:function(v){
+      if(String(v).trim()!=='ลบทั้งหมด'){ Swal.showValidationMessage('กรุณาพิมพ์คำว่า "ลบทั้งหมด" ให้ถูกต้อง'); return false; }
+      return true;
+    }})
+  .then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('deleteAllStudents').then(function(res){showLoader(false);
+      toast('success','ลบนักเรียนทั้งหมดแล้ว ('+(res.deleted||total)+' คน)'); loadStudents();})
+      .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
+}
+function importExcel(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    // raw:false + ให้ทุกค่าเป็น string เพื่อกันเลขบัตร 13 หลักเพี้ยน
+    const wb=XLSX.read(ev.target.result,{type:'binary',raw:false});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:false,defval:''});
+    if(!rows.length){toast('warning','ไฟล์ว่าง');return;}
+    showLoader(true);
+    api('importStudents',rows).then(function(res){
+      showLoader(false);
+      Swal.fire('นำเข้าเสร็จสิ้น','เพิ่ม '+res.added+' คน · ข้าม(ซ้ำ) '+res.skipped+' คน','success');
+      loadStudents();
+    }).catch(function(err){ showLoader(false); Swal.fire('ผิดพลาด',err.message,'error'); });
+  };
+  reader.readAsBinaryString(file);
+  e.target.value='';
+}
+function downloadTemplate(){
+  const ws=XLSX.utils.json_to_sheet([
+    {'รหัสนักเรียน':'10001','เลขที่':'1','คำนำหน้า':'เด็กชาย','ชื่อ-สกุล':'สมชาย ใจดี','ชั้น':'ป.6','เลขบัตรประชาชน':'1100701234567','รูป':''}
+  ]);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'นักเรียน');
+  XLSX.writeFile(wb,'template_นักเรียน.xlsx');
+}
+
+/* ============ STUDENT LIST (อ่านอย่างเดียว: ครูเวร/ผู้บริหาร) ============ */
+let studentListCache=[];
+function renderStudentList(){
+  document.getElementById('content').innerHTML =
+  '<div class="card mb-3"><div class="card-header"><i class="bi bi-funnel"></i> ค้นหารายชื่อนักเรียน</div>'
+  +'<div class="card-body"><div class="row g-2 align-items-end">'
+  +'<div class="col-md-5"><label class="form-label">ค้นหา (รหัส หรือ ชื่อ-สกุล)</label>'
+  +'<input id="slSearch" class="form-control" placeholder="พิมพ์รหัสหรือชื่อ" oninput="filterStudentList()"></div>'
+  +'<div class="col-md-4"><label class="form-label">เลือกชั้น/ห้อง</label>'
+  +'<select id="slGrade" class="form-select" onchange="filterStudentList()"><option value="">ทุกชั้น</option></select></div>'
+  +'<div class="col-md-3"><label class="form-label">จำนวนที่พบ</label>'
+  +'<div class="form-control bg-light fw-bold" id="slCount">0 คน</div></div>'
+  +'</div></div></div>'
+  +'<div class="card"><div class="card-header"><i class="bi bi-people-fill"></i> รายชื่อนักเรียน</div>'
+  +'<div class="card-body table-responsive" style="max-height:560px;overflow:auto;">'
+  +'<table class="table table-hover table-sm"><thead class="table-light" style="position:sticky;top:0;">'
+  +'<tr><th>รูป</th><th>รหัส</th><th>เลขที่</th><th>ชื่อ-สกุล</th><th>ชั้น</th></tr></thead>'
+  +'<tbody id="slBody"></tbody></table></div></div>';
+  showLoader(true);
+  api('getStudents').then(function(list){
+    showLoader(false);
+    studentListCache = list;
+    const grades=[...new Set(list.map(function(s){return s.grade;}).filter(Boolean))].sort();
+    document.getElementById('slGrade').innerHTML='<option value="">ทุกชั้น</option>'
+      + grades.map(function(g){return '<option>'+esc(g)+'</option>';}).join('');
+    filterStudentList();
+  }).catch(function(e){ showLoader(false); toast('error','โหลดรายชื่อไม่ได้: '+e.message); });
+}
+function filterStudentList(){
+  const q=(document.getElementById('slSearch').value||'').trim().toLowerCase();
+  const g=document.getElementById('slGrade').value;
+  const rows=studentListCache.filter(function(s){
+    const matchGrade = !g || s.grade===g;
+    const hay = ((s.code||'')+' '+(s.prefix||'')+(s.name||'')).toLowerCase();
+    const matchText = !q || hay.indexOf(q)!==-1;
+    return matchGrade && matchText;
+  });
+  document.getElementById('slCount').innerText = rows.length+' คน';
+  document.getElementById('slBody').innerHTML = rows.map(function(s){
+    const img = s.photo
+      ? '<img src="'+esc(s.photo)+'" class="student-photo">'
+      : '<div class="student-photo d-flex align-items-center justify-content-center"><i class="bi bi-person"></i></div>';
+    return '<tr><td>'+img+'</td><td>'+esc(s.code)+'</td><td>'+esc(s.no)+'</td>'
+      +'<td>'+esc((s.prefix||'')+s.name)+'</td><td>'+esc(s.grade)+'</td></tr>';
+  }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่พบนักเรียน</td></tr>';
+}
+
+/* ============ STUDENT CARDS ============ */
+function renderCards(){
+  document.getElementById('content').innerHTML =
+  '<div class="card mb-3"><div class="card-header"><i class="bi bi-card-heading"></i> พิมพ์บัตรนักเรียน</div>'
+  +'<div class="card-body"><div class="row g-2 align-items-end">'
+  +'<div class="col-md-4"><label class="form-label">ชั้น</label><select id="cardGrade" class="form-select"></select></div>'
+  +'<div class="col-md-4"><label class="form-label">รูปแบบรหัส</label><select id="cardType" class="form-select"><option value="qr">QR Code</option><option value="barcode">Barcode</option></select></div>'
+  +'<div class="col-md-4 d-grid"><button class="btn btn-primary" onclick="genCards()"><i class="bi bi-eye"></i> แสดงบัตร</button></div>'
+  +'</div><div class="mt-2"><button class="btn btn-outline-danger btn-sm" onclick="printCards()"><i class="bi bi-printer"></i> พิมพ์ / Export PDF</button></div>'
+  +'</div></div><div id="cardArea" class="text-center"></div>';
+  api('getStudents').then(function(list){
+    studentsCache=list;
+    const grades=[...new Set(list.map(function(s){return s.grade;}).filter(Boolean))].sort();
+    document.getElementById('cardGrade').innerHTML='<option value="">ทุกชั้น</option>'+grades.map(function(g){return '<option>'+esc(g)+'</option>';}).join('');
+  });
+}
+function genCards(){
+  const g=document.getElementById('cardGrade').value;
+  const type=document.getElementById('cardType').value;
+  const list=studentsCache.filter(function(s){return (!g||s.grade===g);});
+  if(!list.length){toast('warning','ไม่พบนักเรียน');return;}
+  const area=document.getElementById('cardArea');
+  area.innerHTML=list.map(function(s,i){
+    const photo = s.photo?'<img src="'+esc(s.photo)+'" class="photo">':'<div class="photo d-inline-flex align-items-center justify-content-center"><i class="bi bi-person" style="font-size:2rem;color:#94a3b8;"></i></div>';
+    return '<div class="id-card"><div class="head"><img src="'+LOGO+'" onerror="this.style.display=\'none\'">'
+      +'<div style="font-weight:600;font-size:.85rem;">โรงเรียนสยามกลการ 4</div><div style="font-size:.7rem;">บัตรประจำตัวนักเรียน</div></div>'
+      +'<div class="body">'+photo
+      +'<div class="fw-bold mt-2">'+esc((s.prefix||'')+s.name)+'</div>'
+      +'<div class="text-muted small">ชั้น '+esc(s.grade)+' เลขที่ '+esc(s.no)+'</div>'
+      +'<div class="small">รหัสนักเรียน: '+esc(s.code)+'</div>'
+      +'<div id="code_'+i+'" class="mt-2"></div></div></div>';
+  }).join('');
+  list.forEach(function(s,i){
+    const el=document.getElementById('code_'+i);
+    if(type==='qr'){ new QRCode(el,{text:String(s.code),width:90,height:90}); }
+    else{ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); el.appendChild(svg);
+      JsBarcode(svg,String(s.code),{format:'CODE128',width:1.6,height:45,fontSize:12}); }
+  });
+}
+function printCards(){
+  const html=document.getElementById('cardArea').innerHTML;
+  if(!html.trim()){toast('warning','กดแสดงบัตรก่อน');return;}
+  const w=window.open('','_blank');
+  w.document.write('<html><head><title>บัตรนักเรียน</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">'
+    +'<style>body{font-family:Sarabun,sans-serif;}'
+    +'.id-card{width:300px;border:2px solid #1e3a8a;border-radius:14px;overflow:hidden;display:inline-block;margin:6px;vertical-align:top;page-break-inside:avoid;}'
+    +'.id-card .head{background:#1e3a8a;color:#fff;padding:8px;text-align:center;}'
+    +'.id-card .head img{width:40px;height:40px;border-radius:50%;background:#fff;}'
+    +'.id-card .body{padding:10px;text-align:center;}.photo{width:100px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #ccc;}'
+    +'</style></head><body>'+html+'</body></html>');
+  w.document.close();
+  setTimeout(function(){w.print();},800);
+}
+
+/* ============ REPORTS ============ */
+function renderReports(){
+  document.getElementById('content').innerHTML =
+  '<div class="card mb-3"><div class="card-header"><i class="bi bi-funnel"></i> ตัวกรองรายงาน</div>'
+  +'<div class="card-body"><div class="row g-2 align-items-end">'
+  +'<div class="col-md-3"><label class="form-label">ประเภท</label><select id="rType" class="form-select" onchange="reportTypeChange()">'
+    +'<option value="daily">รายวัน</option><option value="monthly">รายเดือน</option><option value="term">รายภาคเรียน</option>'
+    +'<option value="year">รายปีการศึกษา</option><option value="personal">รายบุคคล</option><option value="range">ช่วงวันที่</option></select></div>'
+  +'<div class="col-md-3"><label class="form-label">กิจกรรม</label><select id="rActivity" class="form-select"><option value="">ทุกกิจกรรม</option></select></div>'
+  +'<div class="col-md-3" id="boxFrom"><label class="form-label">จากวันที่</label><input type="date" id="rFrom" class="form-control"></div>'
+  +'<div class="col-md-3" id="boxTo"><label class="form-label">ถึงวันที่</label><input type="date" id="rTo" class="form-control"></div>'
+  +'<div class="col-md-3" id="boxCode" style="display:none;"><label class="form-label">รหัสนักเรียน</label><input id="rCode" class="form-control" placeholder="รหัส"></div>'
+  +'<div class="col-md-3"><label class="form-label">ชั้น</label><input id="rGrade" class="form-control" placeholder="เช่น ป.6"></div>'
+  +'<div class="col-md-3 d-grid"><button class="btn btn-primary" onclick="runReport()"><i class="bi bi-search"></i> ค้นหา</button></div>'
+  +'</div></div></div>'
+  +'<div class="card"><div class="card-header d-flex justify-content-between align-items-center"><span><i class="bi bi-table"></i> ผลรายงาน</span>'
+  +'<div><button class="btn btn-outline-success btn-sm" onclick="exportReportExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button> '
+  +'<button class="btn btn-outline-danger btn-sm" onclick="exportReportPDF()"><i class="bi bi-file-earmark-pdf"></i> PDF</button></div></div>'
+  +'<div class="card-body"><div id="reportSummary" class="row g-2 mb-3"></div>'
+  +'<div class="table-responsive"><table id="reportTable" class="table table-hover" style="width:100%">'
+  +'<thead><tr><th>วันที่</th><th>เวลา</th><th>กิจกรรม</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th><th>ผู้บันทึก</th></tr></thead>'
+  +'<tbody></tbody></table></div></div></div>';
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('rFrom').value=today;
+  document.getElementById('rTo').value=today;
+  reportTypeChange();
+  api('getActivities').then(function(list){
+    activitiesCache=list;
+    document.getElementById('rActivity').innerHTML='<option value="">ทุกกิจกรรม</option>'
+      + list.map(function(a){return '<option>'+esc(a.name)+'</option>';}).join('');
+  });
+}
+let reportData=[];
+function reportTypeChange(){
+  const t=document.getElementById('rType').value;
+  const boxFrom=document.getElementById('boxFrom');
+  const boxTo=document.getElementById('boxTo');
+  const boxCode=document.getElementById('boxCode');
+  // ค่าเริ่มต้น: ซ่อนช่องรหัส แสดงช่องวันที่
+  boxCode.style.display='none';
+  boxFrom.style.display='';
+  boxTo.style.display='';
+  if(t==='personal'){
+    // รายบุคคล: โชว์ช่องรหัส ซ่อนช่องวันที่ (ดูทุกช่วงเวลาของคนคนนั้น)
+    boxCode.style.display='';
+    boxFrom.style.display='none';
+    boxTo.style.display='none';
+  }else if(t==='monthly'){
+    // รายเดือน: ใช้แค่ "จากวันที่" เป็นตัวเลือกเดือน ซ่อนช่องถึงวันที่
+    boxTo.style.display='none';
+  }else if(t==='year'||t==='term'){
+    // รายปี/ภาคเรียน: ใช้ค่าจากตั้งค่า ไม่ต้องเลือกวันที่
+    boxFrom.style.display='none';
+    boxTo.style.display='none';
+  }
+}
+  
+function runReport(){
+  const t=document.getElementById('rType').value;
+  const f={dateFrom:document.getElementById('rFrom').value, dateTo:document.getElementById('rTo').value,
+    grade:document.getElementById('rGrade').value.trim(),
+    activity:document.getElementById('rActivity').value};
+  if(t==='monthly'){ const d=new Date(f.dateFrom||new Date());
+    f.dateFrom=new Date(d.getFullYear(),d.getMonth(),1).toISOString().slice(0,10);
+    f.dateTo=new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10); }
+  if(t==='year'||t==='term'){ f.dateFrom=''; f.dateTo=''; f.year=settings.academicYear; if(t==='term')f.term=settings.term; }
+  if(t==='personal'){ f.code=document.getElementById('rCode').value.trim();
+    if(!f.code){toast('warning','กรอกรหัสนักเรียน');return;} f.dateFrom=''; f.dateTo=''; }
+  showLoader(true);
+  api('getReport',f).then(function(rows){
+    showLoader(false);
+    reportData=rows;
+    const present=rows.filter(function(r){return r.status==='ปกติ';}).length;
+    const late=rows.filter(function(r){return r.status==='มาสาย';}).length;
+    document.getElementById('reportSummary').innerHTML =
+      sumBox('primary','รวมทั้งหมด',rows.length)+sumBox('success','ปกติ',present)+sumBox('warning','มาสาย',late);
+    if($.fn.dataTable.isDataTable('#reportTable')) $('#reportTable').DataTable().destroy();
+    $('#reportTable tbody').html(rows.map(function(r){
+      const b=r.status==='ปกติ'?'badge-present':'badge-late';
+      return '<tr><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.activity)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td>'
+        +'<td>'+esc(r.grade)+'</td><td><span class="badge '+b+'">'+r.status+'</span></td><td>'+esc(r.recorder)+'</td></tr>';
+    }).join(''));
+    $('#reportTable').DataTable({language:thaiDT(),order:[[0,'desc']],pageLength:25});
+  });
+}
+function exportReportExcel(){
+  if(!reportData.length){toast('warning','ไม่มีข้อมูล');return;}
+  const data=reportData.map(function(r){return {'วันที่':fmtThaiDate(r.date),'เวลา':fmtThaiTime(r.time),'กิจกรรม':r.activity,'รหัส':r.code,'ชื่อ-สกุล':r.name,'ชั้น':r.grade,'สถานะ':r.status,'ผู้บันทึก':r.recorder};});
+  const ws=XLSX.utils.json_to_sheet(data); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'รายงาน');
+  XLSX.writeFile(wb,'รายงานเช็กชื่อ_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+function exportReportPDF(){
+  if(!reportData.length){toast('warning','ไม่มีข้อมูล');return;}
+  const present=reportData.filter(function(r){return r.status==='ปกติ';}).length;
+  const late=reportData.filter(function(r){return r.status==='มาสาย';}).length;
+  const rows=reportData.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+fmtThaiDate(r.date)+'</td><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.activity)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td><td>'+r.status+'</td></tr>';}).join('');
+  const w=window.open('','_blank');
+  w.document.write('<html><head><title>รายงานเช็กชื่อ</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">'
+    +'<style>body{font-family:Sarabun,sans-serif;padding:20px;}h3,h4{text-align:center;margin:2px;}'
+    +'.logo{display:block;margin:0 auto 6px;height:80px;}'
+    +'table{width:100%;border-collapse:collapse;margin-top:12px;}th,td{border:1px solid #999;padding:5px 8px;font-size:13px;}'
+    +'th{background:#1e3a8a;color:#fff;}.summary{text-align:center;margin:10px;}</style></head><body>'
+    +'<img class="logo" src="'+LOGO+'" onerror="this.style.display=\'none\'">'
+    +'<h3>โรงเรียนสยามกลการ 4 | สพป.มุกดาหาร</h3><h4>รายงานการเช็กชื่อ</h4>'
+    +'<div class="summary">รวม '+reportData.length+' รายการ | ปกติ '+present+' | มาสาย '+late+'</div>'
+    +'<table><thead><tr><th>#</th><th>วันที่</th><th>เวลา</th><th>กิจกรรม</th><th>รหัสนักเรียน</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<p style="margin-top:30px;text-align:right;">ผู้พิมพ์รายงาน: '+esc(currentUser.name)+'</p>'
+    +'<scr'+'ipt>window.onload=function(){setTimeout(function(){window.print();},400);};</scr'+'ipt>'
+    +'</body></html>');
+  w.document.close();
+}
+function sumBox(color,label,val){
+  return '<div class="col-4"><div class="alert alert-'+color+' text-center mb-0 py-2"><div class="small">'+label+'</div><h4 class="mb-0">'+val+'</h4></div></div>';
+}
+
+/* ============ USERS ============ */
+let usersCache=[];
+function renderUsers(){
+  document.getElementById('content').innerHTML =
+  '<div class="card"><div class="card-header d-flex justify-content-between align-items-center">'
+  +'<span><i class="bi bi-person-gear"></i> จัดการผู้ใช้งาน</span>'
+    +'<div class="d-flex gap-2">'
+  +'<button class="btn btn-success btn-sm" onclick="userModal()"><i class="bi bi-plus-lg"></i> เพิ่มผู้ใช้</button>'
+  +'<label class="btn btn-outline-primary btn-sm mb-0"><i class="bi bi-filetype-csv"></i> นำเข้า CSV'
+  +'<input type="file" hidden accept=".csv,.xlsx,.xls" onchange="importUsersFile(event)"></label>'
+  +'<button class="btn btn-outline-secondary btn-sm" onclick="downloadUserTemplate()"><i class="bi bi-download"></i> เทมเพลต</button>'
+  +'</div></div>'
+  +'<div class="card-body table-responsive"><table class="table table-hover"><thead><tr>'
+  +'<th>ชื่อผู้ใช้</th><th>ชื่อ-สกุล</th><th>สิทธิ์</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="userBody"></tbody></table></div></div>';
+  loadUsers();
+}
+function loadUsers(){
+  api('getUsers').then(function(list){
+    usersCache=list;
+    const roleTH={admin:'ผู้ดูแลระบบ',teacher:'ครูเวร',director:'ผู้บริหาร'};
+    document.getElementById('userBody').innerHTML=list.map(function(u){
+      return '<tr><td>'+esc(u.username)+'</td><td>'+esc(u.name)+'</td>'
+        +'<td><span class="badge bg-info">'+(roleTH[u.role]||u.role)+'</span></td>'
+        +'<td><span class="badge '+(u.status==='ใช้งาน'?'bg-success':'bg-secondary')+'">'+esc(u.status)+'</span></td>'
+        +'<td><button class="btn btn-sm btn-warning" onclick="editUser('+u.row+')"><i class="bi bi-pencil"></i></button> '
+        +'<button class="btn btn-sm btn-danger" onclick="delUser('+u.row+',\''+esc(u.username)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+    }).join('');
+  });
+}
+
+function importUsersFile(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const wb=XLSX.read(ev.target.result,{type:'binary'});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    if(!rows.length){toast('warning','ไฟล์ว่าง');return;}
+    showLoader(true);
+    api('importUsers',rows).then(function(res){
+      showLoader(false);
+      if(res.ok){ Swal.fire('นำเข้าเสร็จสิ้น','เพิ่ม '+res.added+' คน · ข้าม(ซ้ำ/ไม่ครบ) '+res.skipped+' คน','success'); loadUsers(); }
+      else Swal.fire('ผิดพลาด',res.message,'error');
+    }).catch(function(er){showLoader(false);toast('error',er.message);});
+  };
+  reader.readAsBinaryString(file); e.target.value='';
+}
+function downloadUserTemplate(){
+  const ws=XLSX.utils.json_to_sheet([{username:'teacher01',password:'1234',name:'ครูสมชาย ใจดี',role:'teacher',status:'ใช้งาน'}]);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Users');
+  XLSX.writeFile(wb,'template_ผู้ใช้งาน.csv',{bookType:'csv'});
+}
+function userModal(u){
+  u=u||{row:'',username:'',name:'',role:'teacher',status:'ใช้งาน'};
+  Swal.fire({title:u.row?'แก้ไขผู้ใช้':'เพิ่มผู้ใช้',width:500,html:
+    '<div class="text-start"><div class="mb-2"><label class="form-label">ชื่อผู้ใช้*</label><input id="u_user" class="form-control" value="'+esc(u.username)+'"></div>'
+    +'<div class="mb-2"><label class="form-label">ชื่อ-สกุล*</label><input id="u_name" class="form-control" value="'+esc(u.name)+'"></div>'
+    +'<div class="mb-2"><label class="form-label">รหัสผ่าน'+(u.row?' (เว้นว่างถ้าไม่เปลี่ยน)':'*')+'</label><input id="u_pass" type="password" class="form-control"></div>'
+    +'<div class="row g-2"><div class="col-6"><label class="form-label">สิทธิ์</label><select id="u_role" class="form-select">'
+      +[['admin','ผู้ดูแลระบบ'],['teacher','ครูเวร'],['director','ผู้บริหาร']].map(function(r){return '<option value="'+r[0]+'" '+(u.role===r[0]?'selected':'')+'>'+r[1]+'</option>';}).join('')+'</select></div>'
+    +'<div class="col-6"><label class="form-label">สถานะ</label><select id="u_status" class="form-select">'
+      +['ใช้งาน','ระงับ'].map(function(s){return '<option '+(u.status===s?'selected':'')+'>'+s+'</option>';}).join('')+'</select></div></div></div>',
+    showCancelButton:true,confirmButtonText:'บันทึก',cancelButtonText:'ยกเลิก',confirmButtonColor:'#1e3a8a',
+    didOpen:function(){window._uRow=u.row;},
+    preConfirm:function(){
+      const d={row:window._uRow,username:val('u_user'),name:val('u_name'),password:val('u_pass'),role:val('u_role'),status:val('u_status')};
+      if(!d.username||!d.name){Swal.showValidationMessage('กรอกข้อมูลให้ครบ');return false;}
+      return d;
+    }
+  }).then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('saveUser',r.value).then(function(res){showLoader(false);
+      if(res.ok){toast('success','บันทึกแล้ว');loadUsers();}else Swal.fire('ผิดพลาด',res.message,'error');});}});
+}
+function editUser(row){userModal(usersCache.find(function(u){return u.row===row;}));}
+function delUser(row,name){
+  Swal.fire({title:'ลบผู้ใช้?',text:name,icon:'warning',showCancelButton:true,confirmButtonText:'ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){if(r.isConfirmed){api('deleteUser',row).then(function(){toast('success','ลบแล้ว');loadUsers();});}});
+}
+
+/* ============ ACTIVITIES (แอดมิน) ============ */
+let activitiesCache=[];
+let currentCheckinActivity='เข้าแถวหน้าเสาธง';
+function renderActivities(){
+  document.getElementById('content').innerHTML =
+  '<div class="card"><div class="card-header d-flex justify-content-between align-items-center">'
+  +'<span><i class="bi bi-calendar-event"></i> กำหนดกิจกรรม</span>'
+  +'<button class="btn btn-success btn-sm" onclick="activityModal()"><i class="bi bi-plus-lg"></i> เพิ่มกิจกรรม</button></div>'
+  +'<div class="card-body table-responsive"><table class="table table-hover"><thead><tr>'
+  +'<th>ชื่อกิจกรรม</th><th>เวลาเข้า (หลังเวลานี้ = สาย)</th><th>สถานะ</th><th>จัดการ</th></tr></thead>'
+  +'<tbody id="actBody"></tbody></table></div></div>';
+  loadActivities();
+}
+function loadActivities(){
+  showLoader(true);
+  api('getActivities').then(function(list){
+    showLoader(false);
+    activitiesCache=list;
+    document.getElementById('actBody').innerHTML = list.map(function(a){
+      return '<tr><td class="fw-bold">'+esc(a.name)+'</td><td>'+esc(a.lateAfter)+' น.</td>'
+        +'<td><span class="badge '+(a.status==='เปิด'?'bg-success':'bg-secondary')+'">'+esc(a.status)+'</span></td>'
+        +'<td><button class="btn btn-sm btn-warning" onclick="editActivity('+a.row+')"><i class="bi bi-pencil"></i></button> '
+        +'<button class="btn btn-sm btn-danger" onclick="delActivity('+a.row+',\''+esc(a.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+    }).join('') || '<tr><td colspan="4" class="text-center text-muted py-3">ยังไม่มีกิจกรรม</td></tr>';
+  });
+}
+function activityModal(a){
+  a=a||{row:'',id:'',name:'',lateAfter:'08:00',status:'เปิด'};
+  Swal.fire({title:a.row?'แก้ไขกิจกรรม':'เพิ่มกิจกรรม',width:500,html:
+    '<div class="text-start">'
+    +'<div class="mb-2"><label class="form-label">ชื่อกิจกรรม*</label><input id="a_name" class="form-control" value="'+esc(a.name)+'" placeholder="เช่น เข้าแถวหน้าเสาธง"></div>'
+    +'<div class="mb-2"><label class="form-label">เวลาเข้า (หลังเวลานี้ถือว่ามาสาย)</label><input type="time" id="a_late" class="form-control" value="'+esc(a.lateAfter||'08:00')+'"></div>'
+    +'<div class="mb-2"><label class="form-label">สถานะ</label><select id="a_status" class="form-select">'
+      +['เปิด','ปิด'].map(function(s){return '<option '+(a.status===s?'selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'
+    +'</div>',
+    showCancelButton:true,confirmButtonText:'บันทึก',cancelButtonText:'ยกเลิก',confirmButtonColor:'#1e3a8a',
+    didOpen:function(){window._aRow=a.row; window._aId=a.id;},
+    preConfirm:function(){
+      const d={row:window._aRow,id:window._aId,name:val('a_name'),lateAfter:val('a_late'),status:val('a_status')};
+      if(!d.name){Swal.showValidationMessage('กรอกชื่อกิจกรรม');return false;}
+      return d;
+    }
+  }).then(function(r){ if(r.isConfirmed){ showLoader(true);
+    api('saveActivity',r.value).then(function(res){showLoader(false);
+      if(res.ok){toast('success','บันทึกแล้ว');loadActivities();}else Swal.fire('ผิดพลาด',res.message,'error');});}});
+}
+function editActivity(row){activityModal(activitiesCache.find(function(a){return a.row===row;}));}
+function delActivity(row,name){
+  Swal.fire({title:'ลบกิจกรรม?',text:name,icon:'warning',showCancelButton:true,confirmButtonText:'ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){if(r.isConfirmed){api('deleteActivity',row).then(function(){toast('success','ลบแล้ว');loadActivities();});}});
+}
+function onActivityChange(){
+  const sel=document.getElementById('checkinActivity');
+  if(sel) currentCheckinActivity=sel.value;
+  const a=activitiesCache.find(function(x){return x.name===currentCheckinActivity;});
+  const hint=document.getElementById('actHint');
+  if(hint) hint.innerText = a?('นับว่ามาสายหลัง '+a.lateAfter+' น.'):'';
+  refreshLive();
+}
+  
+/* ============ SETTINGS ============ */
+function renderSettings(){
+  document.getElementById('content').innerHTML='<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+  api('getSettings').then(function(s){
+    settings=s;
+    document.getElementById('content').innerHTML =
+    '<div class="row justify-content-center"><div class="col-lg-6"><div class="card"><div class="card-header"><i class="bi bi-gear-fill"></i> ตั้งค่าปีการศึกษาและภาคเรียน</div>'
+    +'<div class="card-body"><div class="mb-3"><label class="form-label">ปีการศึกษา</label><input id="s_year" class="form-control" value="'+esc(s.academicYear||'')+'"></div>'
+    +'<div class="mb-3"><label class="form-label">ภาคเรียน</label><select id="s_term" class="form-select"><option value="1" '+(s.term==='1'?'selected':'')+'>ภาคเรียนที่ 1</option><option value="2" '+(s.term==='2'?'selected':'')+'>ภาคเรียนที่ 2</option></select></div>'
+    +'<div class="mb-3"><label class="form-label">เวลาเข้าแถว (หลังเวลานี้ = มาสาย)</label><input type="time" id="s_late" class="form-control" value="'+esc(s.lateAfter||'08:00')+'"></div>'
+    +'<button class="btn btn-primary w-100" onclick="saveSet()"><i class="bi bi-save"></i> บันทึกการตั้งค่า</button></div></div></div></div>';
+  });
+}
+function saveSet(){
+  const obj={academicYear:val('s_year'),term:val('s_term'),lateAfter:val('s_late')};
+  showLoader(true);
+  api('saveSettings',obj).then(function(s){showLoader(false);settings=s;toast('success','บันทึกการตั้งค่าแล้ว');});
+}
+
+function thaiDT(){
+  return {search:'ค้นหา:',lengthMenu:'แสดง _MENU_ รายการ',info:'แสดง _START_-_END_ จาก _TOTAL_ รายการ',
+    infoEmpty:'ไม่มีข้อมูล',zeroRecords:'ไม่พบข้อมูล',emptyTable:'ไม่พบข้อมูล',
+    paginate:{first:'หน้าแรก',last:'หน้าสุดท้าย',next:'ถัดไป',previous:'ก่อนหน้า'}};
+}
+
+  // คืนสถานะล็อกอินอัตโนมัติเมื่อรีเฟรชหน้า
+(function restoreLogin(){
+  const u = loadSession();
+  if(u){ currentUser = u; startApp(); }
+})();
+setInterval(function(){ if(document.getElementById('liveTable')) refreshLive(false); },15000);
+
+let typingTimer;
+
+document.addEventListener('input', function(e){
+  if(e.target.id !== 'manualCode') return;
+
+  clearTimeout(typingTimer);
+
+  typingTimer = setTimeout(function(){
+    const v = e.target.value.trim();
+    if(v.length >= 4){
+      submitCheckin(v);
+      e.target.value='';
+    }
+  }, 500);
 });
-async function saveStu(){
-  const code=$('stCode').value.trim(),name=$('stName').value.trim();
-  if(!code||!name)return toast('กรอกรหัสและชื่อ');
-  $('stuSaveBtn').disabled=true;
-  const data={row:$('stRow').value,code:code,no:$('stNo').value.trim(),prefix:$('stPrefix').value.trim(),
-    name:name,grade:$('stGrade').value,idcard:$('stId').value.trim(),photo:window._stuPhoto||''};
-  try{const r=await api('saveStudent',[data]);if(!r.ok)return toast(r.message);
-    closeModal('stuMask');toast('บันทึกแล้ว');STUDENTS_CACHE=[];await ensureStudents();renderStudents();
-  }catch(e){toast(e.message);}finally{$('stuSaveBtn').disabled=false;}
-}
-async function delStu(row,name){if(!confirm('ลบนักเรียน '+name+' ?'))return;try{await api('deleteStudent',[row]);STUDENTS_CACHE=[];await ensureStudents();renderStudents();}catch(e){toast(e.message);}}
-function openImport(){$('importBox').value='';openModal('importMask');}
-async function doImport(){
-  const txt=$('importBox').value.trim(); if(!txt)return toast('วางข้อมูลก่อน');
-  const list=txt.split('\n').map(line=>{const c=line.split(/\t|,/).map(x=>x.trim());return {code:c[0],no:c[1],prefix:c[2],name:c[3],grade:c[4],idcard:c[5]};}).filter(r=>r.code&&r.name);
-  if(!list.length)return toast('ไม่พบข้อมูลที่ถูกต้อง');
-  try{const r=await api('importStudents',[list]);closeModal('importMask');toast('นำเข้า '+r.added+' คน · ข้าม '+r.skipped);STUDENTS_CACHE=[];await ensureStudents();renderStudents();}catch(e){toast(e.message);}
-}
-
-/* ===================== USERS PAGE ===================== */
-async function renderUsers(){
-  USERS_CACHE=await api('getUsers',[])||[];
-  $('userList').innerHTML=USERS_CACHE.map(u=>`
-    <div class="list-item"><div class="ti"><div class="h">${esc(u.name)} <span class="muted">(${esc(u.username)})</span></div>
-    <div class="s">${roleTH(u.role)} · ${esc(u.status)}</div></div>
-    <button class="btn-line btn-sm" onclick='editUsr(${JSON.stringify(u)})'>แก้</button>
-    <button class="btn-del" onclick="delUsr(${u.row},'${esc(u.username)}')">ลบ</button></div>`).join('');
-}
-function openUserForm(){['usRow','usUser','usName','usPass'].forEach(id=>$(id).value='');$('usRole').value='teacher';$('usStatus').value='ใช้งาน';$('usUser').disabled=false;$('userFormTitle').textContent='เพิ่มผู้ใช้';openModal('userMask');}
-function editUsr(u){openUserForm();$('userFormTitle').textContent='แก้ไขผู้ใช้';$('usRow').value=u.row;$('usUser').value=u.username;$('usUser').disabled=true;$('usName').value=u.name;$('usRole').value=u.role;$('usStatus').value=u.status;}
-async function saveUsr(){
-  const username=$('usUser').value.trim(),name=$('usName').value.trim();
-  if(!username||!name)return toast('กรอกชื่อผู้ใช้และชื่อ-สกุล');
-  const data={row:$('usRow').value,username:username,name:name,role:$('usRole').value,status:$('usStatus').value,password:$('usPass').value};
-  try{const r=await api('saveUser',[data]);if(!r.ok)return toast(r.message);closeModal('userMask');toast('บันทึกแล้ว');renderUsers();}catch(e){toast(e.message);}
-}
-async function delUsr(row,u){if(u===CURRENT_USER.username)return toast('ลบบัญชีตัวเองไม่ได้');if(!confirm('ลบผู้ใช้ '+u+' ?'))return;try{await api('deleteUser',[row]);renderUsers();}catch(e){toast(e.message);}}
-
-/* ===================== PERIODS PAGE ===================== */
-async function renderPeriods(){
-  PERIODS=await api('getPeriods',[])||[];
-  $('periodList').innerHTML=PERIODS.map(p=>`
-    <div class="list-item"><div class="ti"><div class="h">คาบ ${esc(p.period)}</div><div class="s">${esc(p.start)} - ${esc(p.end)} น.</div></div>
-    <button class="btn-line btn-sm" onclick='editPer(${JSON.stringify(p)})'>แก้</button>
-    <button class="btn-del" onclick="delPer(${p.row})">ลบ</button></div>`).join('');
-}
-function openPeriodForm(){['pdRow','pdNum','pdStart','pdEnd'].forEach(id=>$(id).value='');$('periodFormTitle').textContent='เพิ่มคาบ';openModal('periodMask');}
-function editPer(p){openPeriodForm();$('periodFormTitle').textContent='แก้ไขคาบ';$('pdRow').value=p.row;$('pdNum').value=p.period;$('pdStart').value=p.start;$('pdEnd').value=p.end;}
-async function savePer(){
-  const num=$('pdNum').value.trim();if(!num)return toast('กรอกคาบที่');
-  try{await api('savePeriod',[{row:$('pdRow').value,period:num,start:$('pdStart').value.trim(),end:$('pdEnd').value.trim()}]);closeModal('periodMask');toast('บันทึกแล้ว');renderPeriods();}catch(e){toast(e.message);}
-}
-async function delPer(row){if(!confirm('ลบคาบนี้?'))return;try{await api('deletePeriod',[row]);renderPeriods();}catch(e){toast(e.message);}}
-
-/* ===================== SETTINGS PAGE ===================== */
-function fillSettings(){$('setSchool').value=SETTINGS.schoolName||'';$('setYear').value=SETTINGS.academicYear||'';$('setTerm').value=SETTINGS.term||'1';$('setLogo').value=SETTINGS.logoUrl||'';}
-async function saveSet(){
-  const obj={schoolName:$('setSchool').value.trim(),academicYear:$('setYear').value.trim(),term:$('setTerm').value,logoUrl:$('setLogo').value.trim()};
-  try{SETTINGS=await api('saveSettings',[obj]);toast('บันทึกการตั้งค่าแล้ว');}catch(e){toast(e.message);}
-}
-
-/* ===================== PUBLIC LOOKUP ===================== */
-async function doLookup(){
-  const code=$('lkCode').value.trim(),id=$('lkId').value.trim();
-  if(!code||!id)return toast('กรอกรหัสนักเรียนและเลขบัตรประชาชน');
-  const box=$('lookupResult');box.innerHTML='<div class="muted">กำลังตรวจสอบ…</div>';
-  try{
-    const r=await api('studentLookup',[code,id]);
-    if(!r.ok){box.innerHTML='<div class="empty">'+esc(r.message)+'</div>';return;}
-    const s=r.student;
-    const attHtml=r.attendance.length?r.attendance.map(a=>`<div class="info-box" style="margin-bottom:8px"><div class="v" style="font-size:14px">${esc(a.subject.name||a.subject.code)}</div><div class="muted">มา ${a.present} · สาย ${a.late} · ลา ${a.leave} · ขาด ${a.absent} · หนี ${a.flee}</div></div>`).join(''):'<div class="muted">ยังไม่มีข้อมูลการเช็กชื่อ</div>';
-    const asgHtml=r.assignments.length?r.assignments.map(a=>`<div class="hist-item"><div class="av">📦</div><div><div class="nm" style="font-size:13px">${esc(a.name||'-')}</div><div class="mtx">${esc(a.dateTh)} · ${esc(a.status)}</div></div><span class="badge b-ok">${a.score}/${a.fullScore}</span></div>`).join(''):'<div class="muted">ยังไม่มีข้อมูลภาระงาน</div>';
-    box.innerHTML=`<div class="card" style="box-shadow:none;border:2px solid var(--line);margin:0">
-      <div style="text-align:center">${s.photo?`<img src="${s.photo}" style="width:70px;height:70px;border-radius:18px;object-fit:cover;border:3px solid var(--mint)">`:''}
-      <div style="font-weight:700;font-size:16px;margin-top:6px">${esc(s.prefix||'')}${esc(s.name)}</div>
-      <div class="muted">รหัส ${esc(s.code)} · ชั้น ${esc(s.grade)}</div></div>
-      <h2 style="font-size:15px;margin:14px 0 8px">✅ การเข้าเรียน</h2>${attHtml}
-      <h2 style="font-size:15px;margin:14px 0 8px">📦 ภาระงาน</h2>${asgHtml}</div>`;
-  }catch(e){box.innerHTML='<div class="empty">ตรวจสอบไม่ได้: '+esc(e.message)+'</div>';}
-}
-
-window.addEventListener('beforeunload',stopCam);
 </script>
 </body>
 </html>
