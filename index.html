@@ -378,26 +378,33 @@ function loadDashboard(){
     let gradeRows='';
     Object.keys(d.byGrade).sort().forEach(function(g){
       const v=d.byGrade[g];
-      const pct = v.total? Math.min(100, Math.round(v.checked/v.total*100)):0;
+      const pct = v.total? Math.min(100, Math.round(v.recorded/v.total*100)):0;
       gradeRows += '<tr><td>'+esc(g)+'</td><td class="text-center">'+v.total+'</td>'
-        +'<td class="text-center">'+v.checked+'</td>'
+        +'<td class="text-center text-success fw-bold">'+v.present+'</td>'
+        +'<td class="text-center">'+v.recorded+'</td>'
         +'<td><div class="progress" style="height:18px;"><div class="progress-bar bg-success" style="width:'+pct+'%">'+pct+'%</div></div></td></tr>';
     });
     c.innerHTML =
-    '<div class="row g-3 mb-4">'
+    '<div class="row g-3 mb-2">'
     + statCard('bg-total','people-fill','นักเรียนทั้งหมด',d.total)
-    + statCard('bg-present','check-circle-fill','ปกติวันนี้',d.present)
+    + statCard('bg-present','check-circle-fill','มาปกติ',d.present)
     + statCard('bg-late','clock-fill','มาสาย',d.late)
-    + statCard('bg-absent','x-circle-fill','ขาด/ยังไม่มา',d.absent)
+    + statCard('bg-absent','x-circle-fill','ขาด/ลา',d.absentLeave)
+    + '</div>'
+    + '<div class="alert alert-light border mb-4 py-2 small">'
+    + '<i class="bi bi-calculator"></i> กระทบยอด: มาปกติ <b>'+d.present+'</b> + มาสาย <b>'+d.late+'</b> '
+    + '+ ขาด/ลา <b>'+d.absentLeave+'</b> + ยังไม่เช็ก <b>'+d.notRecorded+'</b> = <b>'+d.total+'</b> คน'
     + '</div>'
     + '<div class="row g-3">'
     + '<div class="col-lg-7"><div class="card h-100"><div class="card-header"><i class="bi bi-graph-up"></i> สถิติ 7 วันย้อนหลัง</div>'
     + '<div class="card-body"><canvas id="trendChart" height="120"></canvas></div></div></div>'
     + '<div class="col-lg-5"><div class="card h-100"><div class="card-header"><i class="bi bi-pie-chart"></i> สัดส่วนวันนี้</div>'
     + '<div class="card-body"><canvas id="pieChart" height="120"></canvas></div></div></div>'
-    + '<div class="col-12"><div class="card"><div class="card-header"><i class="bi bi-list-check"></i> สรุปการเช็กชื่อรายชั้น (วันนี้)</div>'
-    + '<div class="card-body table-responsive"><table class="table table-hover"><thead><tr><th>ชั้น</th><th class="text-center">ทั้งหมด</th><th class="text-center">เช็กแล้ว</th><th>ความคืบหน้า</th></tr></thead><tbody>'
-    + (gradeRows||'<tr><td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูล</td></tr>')
+    + '<div class="col-12"><div class="card"><div class="card-header"><i class="bi bi-list-check"></i> สรุปรายชั้น (วันนี้)</div>'
+    + '<div class="card-body table-responsive"><table class="table table-hover">'
+    + '<thead><tr><th>ชั้น</th><th class="text-center">ทั้งหมด</th><th class="text-center">มาเรียน</th>'
+    + '<th class="text-center">บันทึกแล้ว</th><th>ความคืบหน้าการบันทึก</th></tr></thead><tbody>'
+    + (gradeRows||'<tr><td colspan="5" class="text-center text-muted">ยังไม่มีข้อมูล</td></tr>')
     + '</tbody></table></div></div></div></div>';
 
     new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:d.trend.labels,
@@ -405,11 +412,13 @@ function loadDashboard(){
         {label:'มาสาย',data:d.trend.late,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',tension:.3,fill:true}]},
       options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
     new Chart(document.getElementById('pieChart'),{type:'doughnut',
-      data:{labels:['ปกติ','มาสาย','ขาด/ยังไม่มา'],
-        datasets:[{data:[d.present,d.late,d.absent],backgroundColor:['#16a34a','#f59e0b','#ef4444']}]},
+      data:{labels:['มาปกติ','มาสาย','ขาด/ลา','ยังไม่เช็ก'],
+        datasets:[{data:[d.present,d.late,d.absentLeave,d.notRecorded],
+          backgroundColor:['#16a34a','#f59e0b','#ef4444','#94a3b8']}]},
       options:{plugins:{legend:{position:'bottom'}}}});
   }).catch(function(e){ c.innerHTML='<div class="alert alert-danger">โหลดข้อมูลไม่ได้: '+esc(e.message)+'</div>'; });
 }
+  
 function statCard(bg,icon,label,val){
   return '<div class="col-6 col-lg-3"><div class="card stat-card '+bg+'"><div class="card-body">'
     +'<i class="bi bi-'+icon+' icon"></i><div style="opacity:.9;font-size:.9rem;">'+label+'</div>'
