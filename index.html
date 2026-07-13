@@ -1257,7 +1257,7 @@ function exportCardFinancePDF(){
     +'<table><thead><tr><th style="text-align:left;">รายการ</th><th>เงิน</th></tr></thead>'
     +'<tbody>'+irow('ออกบัตรใหม่','card')+irow('สายคล้องคอ','lanyard')+irow('ซองใส','cover')+irow('นักเรียนย้ายเข้าใหม่','transfer')+'</tbody>'
     +'<tfoot class="sum"><tr><td style="text-align:left;">รวมรายได้จากคำร้อง</td><td>'+s.incBaht+' ฿</td></tr></tfoot></table>'
-    +'<h4 style="text-align:left;">รายการบันทึกเอง</h4>'
+    +'<h4 style="text-align:left;">รายการใช้จ่าย</h4>'
     +'<table><thead><tr><th>วันที่</th><th>ประเภท</th><th>เงิน</th><th style="text-align:left;">หมายเหตุ</th></tr></thead><tbody>'+ledRows+'</tbody></table>'
     +'<div class="grid"><div>รวมรับ<br><b>'+s.totalIn+' ฿</b></div><div>รวมจ่าย<br><b>'+s.ledOut+' ฿</b></div><div>คงเหลือสุทธิ<br><b>'+s.balance+' ฿</b></div></div>'
     +'<p style="margin-top:30px;text-align:right;">ผู้พิมพ์รายงาน: '+esc(currentUser.name)+'</p>'
