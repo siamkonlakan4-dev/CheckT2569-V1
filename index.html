@@ -81,6 +81,20 @@
   .spinner-overlay{position:fixed;inset:0;background:rgba(255,255,255,.7);z-index:2000;
     display:none;align-items:center;justify-content:center;}
   table.dataTable td{vertical-align:middle;}
+  .big-toast{
+  font-size:1.6rem !important;
+  padding:20px 26px !important;
+  min-width:420px !important;
+}
+.big-toast .swal2-title{
+  font-size:1.35rem !important;
+  font-weight:600 !important;
+}
+.big-toast .swal2-icon{
+  width:2.6em !important;
+  height:2.6em !important;
+}
+  
 </style>
 </head>
 <body>
@@ -267,7 +281,16 @@ function api(fn){
 
 function showLoader(s){document.getElementById('loader').style.display = s?'flex':'none';}
 function toast(icon,title){
-  Swal.fire({toast:true,position:'top-end',icon:icon,title:title,showConfirmButton:false,timer:2200,timerProgressBar:true});
+  Swal.fire({
+    toast:true,
+    position:'top-end',
+    icon:icon,
+    title:title,
+    showConfirmButton:false,
+    timer:2200,
+    timerProgressBar:true,
+    customClass:{ popup:'big-toast' }
+  });
 }
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('show');}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
