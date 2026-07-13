@@ -1026,21 +1026,39 @@ function crSubmit(){
   if(!items.length){toast('warning','เลือกอย่างน้อย 1 รายการ');return;}
   const note=(document.getElementById('crNote')||{}).value||'';
   showLoader(true);
-  api('createCardRequest',{
-    student:cardSelectedStudent, items:items, note:note.trim(), requester:currentUser.name
-  }).then(function(res){
-    showLoader(false);
-    if(res&&res.ok){
-      Swal.fire('ส่งคำร้องแล้ว','คำร้องเลขที่ '+res.id,'success');
-      cardSelectedStudent=null;
-      document.getElementById('crStudentCard').innerHTML='';
-      document.getElementById('crSearch').value='';
-    }else{
-      Swal.fire('ผิดพลาด',(res&&res.message)||'ส่งคำร้องไม่สำเร็จ','error');
+
+  // ตรวจก่อนว่ามีคำร้องค้าง (สถานะยังไม่เป็น "ดำเนินการเรียบร้อย") หรือไม่
+  api('searchCardRequests', cardSelectedStudent.code).then(function(list){
+    const pending=(list||[]).filter(function(r){ return r.status!=='ดำเนินการเรียบร้อย'; });
+    if(pending.length){
+      showLoader(false);
+      const p=pending[0];
+      Swal.fire({
+        icon:'warning',
+        title:'มีคำร้องค้างอยู่แล้ว',
+        html:'นักเรียนคนนี้มีคำร้องที่ยังไม่เสร็จสิ้น<br>'
+            +'รายการ: <b>'+esc(p.items)+'</b><br>'
+            +'สถานะปัจจุบัน: '+cardStatusBadge(p.status)+'<br><br>'
+            +'<small class="text-muted">กรุณารอให้คำร้องเดิมดำเนินการเรียบร้อยก่อน จึงจะสร้างคำร้องใหม่ได้</small>'
+      });
+      return;
     }
+    // ไม่มีคำร้องค้าง ส่งคำร้องได้ตามปกติ
+    return api('createCardRequest',{
+      student:cardSelectedStudent, items:items, note:note.trim(), requester:currentUser.name
+    }).then(function(res){
+      showLoader(false);
+      if(res&&res.ok){
+        Swal.fire('ส่งคำร้องแล้ว','คำร้องเลขที่ '+res.id,'success');
+        cardSelectedStudent=null;
+        document.getElementById('crStudentCard').innerHTML='';
+        document.getElementById('crSearch').value='';
+      }else{
+        Swal.fire('ผิดพลาด',(res&&res.message)||'ส่งคำร้องไม่สำเร็จ','error');
+      }
+    });
   }).catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');});
 }
-
 function crTrack(){
   const code=document.getElementById('crTrackCode').value.trim();
   if(!code){toast('warning','กรอกรหัสนักเรียน');return;}
