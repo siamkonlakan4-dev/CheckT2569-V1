@@ -895,9 +895,10 @@ function runLookup(){
 /* ============ คำร้องขอบัตรใหม่ (ครู) ============ */
 const CARD_STATUS = ['รับคำร้อง','อยู่ระหว่างดำเนินการ','ติดต่อขอรับบัตร','ดำเนินการเรียบร้อย'];
 const CARD_ITEMS = [
-  {key:'card',    label:'ออกบัตรใหม่ (ชำรุด/หาย)', price:10},
-  {key:'lanyard', label:'สายคล้องคอ',              price:30},
-  {key:'cover',   label:'ซองใส',                   price:10}
+  {key:'card',     label:'ออกบัตรใหม่ (ชำรุด/หาย)', price:10},
+  {key:'lanyard',  label:'สายคล้องคอ',              price:30},
+  {key:'cover',    label:'ซองใส',                   price:10},
+  {key:'transfer', label:'นักเรียนย้ายเข้าใหม่',      price:0}
 ];
 let cardSelectedStudent = null;
 
@@ -1006,8 +1007,29 @@ function crTrack(){
 /* ============ จัดการคำร้องบัตร (แอดมิน) ============ */
 function renderCardAdmin(){
   document.getElementById('content').innerHTML =
-  '<div class="card mb-3"><div class="card-header"><i class="bi bi-cash-coin"></i> สรุปยอดค่าใช้จ่าย (ดำเนินการเรียบร้อย)</div>'
-  +'<div class="card-body" id="cardFinance"><div class="text-center py-3"><div class="spinner-border text-primary"></div></div></div></div>'
+  '<div class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">'
+  +'<span><i class="bi bi-cash-coin"></i> สรุปการเงินบัตรนักเรียน</span>'
+  +'<div class="d-flex gap-2 flex-wrap align-items-center">'
+  +'<select id="cfPeriod" class="form-select form-select-sm" style="max-width:150px;" onchange="onFinancePeriodChange()">'
+  +'<option value="today">วันนี้</option><option value="month" selected>เดือนนี้</option>'
+  +'<option value="pick">เลือกเดือน</option><option value="year">ปีการศึกษานี้</option></select>'
+  +'<input type="month" id="cfMonth" class="form-control form-control-sm" style="max-width:150px;display:none;" onchange="renderCardFinance()">'
+  +'<button class="btn btn-outline-danger btn-sm" onclick="exportCardFinancePDF()"><i class="bi bi-file-earmark-pdf"></i> PDF</button>'
+  +'</div></div>'
+  +'<div class="card-body">'
+  +'<div id="cfResult"><div class="text-center py-3"><div class="spinner-border text-primary"></div></div></div>'
+  +'<hr><h6 class="fw-bold"><i class="bi bi-journal-plus"></i> บันทึกรายการเงินเอง</h6>'
+  +'<div class="row g-2 align-items-end">'
+  +'<div class="col-6 col-md-2"><label class="form-label small mb-1">ประเภท</label>'
+  +'<select id="cfType" class="form-select form-select-sm"><option value="รับ">รับ</option><option value="จ่าย">จ่าย</option></select></div>'
+  +'<div class="col-6 col-md-2"><label class="form-label small mb-1">จำนวนเงิน</label>'
+  +'<input id="cfAmount" type="number" min="0" class="form-control form-control-sm" placeholder="บาท"></div>'
+  +'<div class="col-6 col-md-2"><label class="form-label small mb-1">วันที่</label>'
+  +'<input id="cfDate" type="date" class="form-control form-control-sm"></div>'
+  +'<div class="col-6 col-md-4"><label class="form-label small mb-1">หมายเหตุ</label>'
+  +'<input id="cfNote" class="form-control form-control-sm" placeholder="รายละเอียด"></div>'
+  +'<div class="col-12 col-md-2 d-grid"><button class="btn btn-primary btn-sm" onclick="addLedgerEntry()"><i class="bi bi-plus-lg"></i> บันทึก</button></div>'
+  +'</div></div></div>'
   +'<div class="card mb-3"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">'
   +'<span><i class="bi bi-card-checklist"></i> จัดการคำร้องขอบัตร</span>'
   +'<div class="d-flex gap-2 flex-wrap">'
@@ -1018,6 +1040,8 @@ function renderCardAdmin(){
   +'<div class="card-body" id="caBody"><div class="text-center py-4"><div class="spinner-border text-primary"></div></div></div></div>'
   +'<div class="card"><div class="card-header"><i class="bi bi-bar-chart"></i> สถิตินักเรียนที่ขอออกบัตรบ่อย</div>'
   +'<div class="card-body table-responsive" id="caStats"></div></div>';
+
+  document.getElementById('cfDate').value = new Date().toISOString().slice(0,10);
   loadCardFinance(); loadCardAdmin(); loadCardStats();
 }
 
@@ -1047,7 +1071,7 @@ function loadCardAdmin(){
 }
 function caUpdate(id,status){
   api('updateCardRequestStatus',id,status).then(function(){
-    toast('success','อัปเดตสถานะแล้ว'); loadCardAdmin(); loadCardStats();
+    toast('success','อัปเดตสถานะแล้ว'); loadCardAdmin(); loadCardStats(); loadCardFinance();
   }).catch(function(e){toast('error',e.message);});
 }
 function loadCardStats(){
@@ -1063,25 +1087,24 @@ function loadCardStats(){
       +'</tbody></table>';
   });
 }
-/* ===== สรุปยอดเงินคำร้องบัตร (เฉพาะสถานะ "ดำเนินการเรียบร้อย") ===== */
-let cardFinanceData = null;
+/* ===== สรุปการเงินบัตร (เวอร์ชันใหม่: เงินอย่างเดียว + เลือกเดือน + สมุดรับ/จ่าย) ===== */
+let cardReqRaw = [];        // คำร้องที่ "ดำเนินการเรียบร้อย"
+let cardLedgerRaw = [];     // สมุดบันทึกเอง
+let cardFinanceSnapshot = null;
 
-// ราคาต่อหน่วยดึงจาก CARD_ITEMS (แหล่งเดียว ปรับที่เดียว)
+const CARD_KW = { card:'บัตร', lanyard:'สาย', cover:'ซอง', transfer:'ย้าย' };
+
 function cardPrice(key){
   const it = CARD_ITEMS.find(function(x){return x.key===key;});
   return it ? it.price : 0;
 }
-// แยกประเภทจากข้อความ items (จับทั้ง label เต็มและคำสำคัญ)
-const CARD_KW = { card:'บัตร', lanyard:'สาย', cover:'ซอง' };
 function matchCardItems(itemsStr){
-  const s = String(itemsStr||'');
-  const found = {};
+  const s = String(itemsStr||''); const f = {};
   CARD_ITEMS.forEach(function(it){
-    found[it.key] = (s.indexOf(it.label)!==-1 || s.indexOf(CARD_KW[it.key])!==-1) ? 1 : 0;
+    f[it.key] = (s.indexOf(it.label)!==-1 || s.indexOf(CARD_KW[it.key])!==-1) ? 1 : 0;
   });
-  return found;
+  return f;
 }
-// แปลงค่าวันที่เป็น Date เทียบได้
 function toDateObj(v){
   if(!v) return null;
   if(v instanceof Date) return v;
@@ -1091,95 +1114,152 @@ function toDateObj(v){
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
 }
-// ช่วงเวลา: วันนี้ / เดือนนี้ / ปีการศึกษานี้ (พ.ค.–เม.ย.)
-function periodRange(period){
+function financePeriodRange(){
+  const sel = document.getElementById('cfPeriod');
+  const p = sel ? sel.value : 'month';
   const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
-  if(period==='today') return {start:new Date(y,m,d), end:new Date(y,m,d,23,59,59)};
-  if(period==='month') return {start:new Date(y,m,1), end:new Date(y,m+1,0,23,59,59)};
-  const sy = m>=4 ? y : y-1;              // ปีการศึกษาเริ่ม พ.ค.
-  return {start:new Date(sy,4,1), end:new Date(sy+1,3,30,23,59,59)};
+  const y=now.getFullYear(), m=now.getMonth(), d=now.getDate();
+  if(p==='today') return {start:new Date(y,m,d), end:new Date(y,m,d,23,59,59), label:'วันนี้ ('+fmtThaiDate(now)+')'};
+  if(p==='month') return {start:new Date(y,m,1), end:new Date(y,m+1,0,23,59,59), label:'เดือน '+THMONTHS[m]+' '+(y+543)};
+  if(p==='pick'){
+    const mv=(document.getElementById('cfMonth')||{}).value;
+    const parts = mv ? mv.split('-') : [y, m+1];
+    const yy=+parts[0], mo=+parts[1]-1;
+    return {start:new Date(yy,mo,1), end:new Date(yy,mo+1,0,23,59,59), label:'เดือน '+THMONTHS[mo]+' '+(yy+543)};
+  }
+  const sy = m>=4 ? y : y-1;  // ปีการศึกษาเริ่ม พ.ค.
+  return {start:new Date(sy,4,1), end:new Date(sy+1,3,30,23,59,59), label:'ปีการศึกษา '+(sy+543)};
 }
 
 function loadCardFinance(){
-  const box = document.getElementById('cardFinance');
-  if(!box) return;
-  box.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
-  api('getCardRequests','ดำเนินการเรียบร้อย').then(function(list){
-    const periods = ['today','month','year'];
-    const agg = {}, ranges = {};
-    periods.forEach(function(p){ agg[p]={card:0,lanyard:0,cover:0,baht:0,count:0}; ranges[p]=periodRange(p); });
-    (list||[]).forEach(function(r){
-      const dt = toDateObj(r.date); if(!dt) return;
-      const it = matchCardItems(r.items);
-      periods.forEach(function(p){
-        const rg = ranges[p];
-        if(dt>=rg.start && dt<=rg.end){
-          agg[p].card+=it.card; agg[p].lanyard+=it.lanyard; agg[p].cover+=it.cover;
-          agg[p].baht += it.card*cardPrice('card') + it.lanyard*cardPrice('lanyard') + it.cover*cardPrice('cover');
-          agg[p].count++;
-        }
-      });
-    });
-    cardFinanceData = agg;
-    renderCardFinance(agg);
+  const box=document.getElementById('cfResult'); if(!box) return;
+  box.innerHTML='<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
+  Promise.all([ api('getCardRequests','ดำเนินการเรียบร้อย'), api('getCardLedger') ])
+  .then(function(res){
+    cardReqRaw = res[0]||[];
+    cardLedgerRaw = res[1]||[];
+    renderCardFinance();
   }).catch(function(e){ box.innerHTML='<div class="alert alert-danger">'+esc(e.message)+'</div>'; });
 }
 
-function renderCardFinance(a){
-  const box = document.getElementById('cardFinance');
-  function cell(p,key){
-    const q=a[p][key], baht=q*cardPrice(key);
-    return '<td class="text-center">'+q+' <small class="text-muted">('+baht+'฿)</small></td>';
+function onFinancePeriodChange(){
+  const p=document.getElementById('cfPeriod').value;
+  document.getElementById('cfMonth').style.display = (p==='pick')?'':'none';
+  renderCardFinance();
+}
+
+function renderCardFinance(){
+  const box=document.getElementById('cfResult'); if(!box) return;
+  const rg=financePeriodRange();
+
+  const inc={card:0,lanyard:0,cover:0,transfer:0};
+  (cardReqRaw||[]).forEach(function(r){
+    const dt=toDateObj(r.date); if(!dt||dt<rg.start||dt>rg.end) return;
+    const it=matchCardItems(r.items);
+    inc.card+=it.card; inc.lanyard+=it.lanyard; inc.cover+=it.cover; inc.transfer+=it.transfer;
+  });
+  const incBaht = inc.card*cardPrice('card')+inc.lanyard*cardPrice('lanyard')
+                + inc.cover*cardPrice('cover')+inc.transfer*cardPrice('transfer');
+
+  const ledger=(cardLedgerRaw||[])
+    .filter(function(e){ const dt=toDateObj(e.date); return dt&&dt>=rg.start&&dt<=rg.end; })
+    .sort(function(a,b){ return (a.date<b.date)?1:-1; });
+  let ledIn=0, ledOut=0;
+  ledger.forEach(function(e){ if(e.type==='จ่าย') ledOut+=e.amount; else ledIn+=e.amount; });
+  const totalIn=incBaht+ledIn, balance=totalIn-ledOut;
+
+  cardFinanceSnapshot={rg:rg,inc:inc,incBaht:incBaht,ledger:ledger,ledIn:ledIn,ledOut:ledOut,totalIn:totalIn,balance:balance};
+
+  function bahtRow(label,key){
+    return '<tr><td>'+label+'</td><td class="text-end fw-bold">'+(inc[key]*cardPrice(key))+' ฿</td></tr>';
   }
-  box.innerHTML =
-   '<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">'
-   +'<span class="text-muted small"><i class="bi bi-info-circle"></i> รวมเฉพาะคำร้องสถานะ “ดำเนินการเรียบร้อย”</span>'
-   +'<button class="btn btn-outline-danger btn-sm" onclick="exportCardFinancePDF()"><i class="bi bi-file-earmark-pdf"></i> Export PDF</button>'
+  const ledgerRows = ledger.length ? ledger.map(function(e){
+    const isOut=e.type==='จ่าย';
+    return '<tr><td>'+fmtThaiDate(e.date)+'</td>'
+      +'<td><span class="badge '+(isOut?'bg-danger':'bg-success')+'">'+esc(e.type)+'</span></td>'
+      +'<td class="text-end '+(isOut?'text-danger':'text-success')+'">'+(isOut?'-':'+')+e.amount+' ฿</td>'
+      +'<td>'+esc(e.note||'')+'<br><small class="text-muted">'+esc(e.recorder||'')+'</small></td>'
+      +'<td class="text-end"><button class="btn btn-sm btn-outline-danger" onclick="delLedgerEntry(\''+esc(e.id)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+  }).join('') : '<tr><td colspan="5" class="text-center text-muted py-2">ไม่มีรายการบันทึกเองในช่วงนี้</td></tr>';
+
+  box.innerHTML=
+   '<div class="text-muted small mb-2"><i class="bi bi-calendar3"></i> ช่วง: <b>'+esc(rg.label)+'</b></div>'
+   +'<div class="row g-3">'
+   +'<div class="col-lg-5"><div class="table-responsive"><table class="table table-sm table-bordered mb-0">'
+   +'<thead class="table-light"><tr><th>รายได้จากคำร้อง (เสร็จสิ้น)</th><th class="text-end">เงิน</th></tr></thead>'
+   +'<tbody>'+bahtRow('ออกบัตรใหม่','card')+bahtRow('สายคล้องคอ','lanyard')+bahtRow('ซองใส','cover')+bahtRow('นักเรียนย้ายเข้าใหม่','transfer')+'</tbody>'
+   +'<tfoot><tr class="table-light fw-bold"><td>รวมรายได้จากคำร้อง</td><td class="text-end">'+incBaht+' ฿</td></tr></tfoot>'
+   +'</table></div></div>'
+   +'<div class="col-lg-7"><div class="table-responsive"><table class="table table-sm table-bordered mb-0">'
+   +'<thead class="table-light"><tr><th>วันที่</th><th>ประเภท</th><th class="text-end">เงิน</th><th>หมายเหตุ</th><th></th></tr></thead>'
+   +'<tbody>'+ledgerRows+'</tbody></table></div></div>'
    +'</div>'
-   +'<div class="table-responsive"><table class="table table-bordered align-middle mb-0">'
-   +'<thead class="table-light text-center"><tr><th class="text-start">รายการ</th><th>ราคา/หน่วย</th><th>วันนี้</th><th>เดือนนี้</th><th>ปีการศึกษานี้</th></tr></thead>'
-   +'<tbody>'
-   +'<tr><td>บัตร (ออกใหม่)</td><td class="text-center">'+cardPrice('card')+'฿</td>'+cell('today','card')+cell('month','card')+cell('year','card')+'</tr>'
-   +'<tr><td>สายคล้องคอ</td><td class="text-center">'+cardPrice('lanyard')+'฿</td>'+cell('today','lanyard')+cell('month','lanyard')+cell('year','lanyard')+'</tr>'
-   +'<tr><td>ซองใส</td><td class="text-center">'+cardPrice('cover')+'฿</td>'+cell('today','cover')+cell('month','cover')+cell('year','cover')+'</tr>'
-   +'</tbody>'
-   +'<tfoot>'
-   +'<tr class="table-success fw-bold text-center"><td class="text-start" colspan="2">รวมเงิน</td>'
-   +'<td>'+a.today.baht+' ฿</td><td>'+a.month.baht+' ฿</td><td>'+a.year.baht+' ฿</td></tr>'
-   +'<tr class="text-center text-muted small"><td class="text-start" colspan="2">จำนวนคำร้อง</td>'
-   +'<td>'+a.today.count+' รายการ</td><td>'+a.month.count+' รายการ</td><td>'+a.year.count+' รายการ</td></tr>'
-   +'</tfoot></table></div>';
+   +'<div class="row g-2 mt-1">'
+   +'<div class="col-4"><div class="alert alert-success text-center mb-0 py-2"><div class="small">รวมรับ</div><h5 class="mb-0">'+totalIn+' ฿</h5></div></div>'
+   +'<div class="col-4"><div class="alert alert-danger text-center mb-0 py-2"><div class="small">รวมจ่าย</div><h5 class="mb-0">'+ledOut+' ฿</h5></div></div>'
+   +'<div class="col-4"><div class="alert alert-primary text-center mb-0 py-2"><div class="small">คงเหลือสุทธิ</div><h5 class="mb-0">'+balance+' ฿</h5></div></div>'
+   +'</div>';
+}
+
+function addLedgerEntry(){
+  const type=document.getElementById('cfType').value;
+  const amount=Number(document.getElementById('cfAmount').value);
+  const note=document.getElementById('cfNote').value.trim();
+  const date=document.getElementById('cfDate').value;
+  if(!amount||amount<=0){ toast('warning','กรอกจำนวนเงินให้ถูกต้อง'); return; }
+  showLoader(true);
+  api('addCardLedger',{type:type,amount:amount,note:note,date:date,recorder:currentUser.name})
+  .then(function(res){
+    showLoader(false);
+    if(res&&res.ok){
+      toast('success','บันทึกรายการแล้ว');
+      document.getElementById('cfAmount').value='';
+      document.getElementById('cfNote').value='';
+      loadCardFinance();
+    } else { toast('error',(res&&res.message)||'บันทึกไม่สำเร็จ'); }
+  }).catch(function(e){ showLoader(false); toast('error',e.message); });
+}
+
+function delLedgerEntry(id){
+  Swal.fire({title:'ลบรายการนี้?',icon:'warning',showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-trash"></i> ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
+  .then(function(r){
+    if(!r.isConfirmed) return;
+    showLoader(true);
+    api('deleteCardLedger',id).then(function(res){
+      showLoader(false);
+      if(res&&res.ok){ toast('success','ลบแล้ว'); loadCardFinance(); }
+      else toast('error',(res&&res.message)||'ลบไม่สำเร็จ');
+    }).catch(function(e){ showLoader(false); toast('error',e.message); });
+  });
 }
 
 function exportCardFinancePDF(){
-  if(!cardFinanceData){ toast('warning','ยังไม่มีข้อมูล'); return; }
-  const a = cardFinanceData;
-  const ayLabel = settings.academicYear ? ('ปีการศึกษา '+esc(settings.academicYear)) : 'ปีการศึกษาปัจจุบัน';
-  function row(label,key){
-    const p=cardPrice(key);
-    return '<tr><td style="text-align:left;">'+label+'</td><td>'+p+'฿</td>'
-      +'<td>'+a.today[key]+' ('+(a.today[key]*p)+'฿)</td>'
-      +'<td>'+a.month[key]+' ('+(a.month[key]*p)+'฿)</td>'
-      +'<td>'+a.year[key]+' ('+(a.year[key]*p)+'฿)</td></tr>';
-  }
+  const s=cardFinanceSnapshot;
+  if(!s){ toast('warning','ยังไม่มีข้อมูล'); return; }
+  function irow(label,key){ return '<tr><td style="text-align:left;">'+label+'</td><td>'+(s.inc[key]*cardPrice(key))+' ฿</td></tr>'; }
+  const ledRows = s.ledger.length ? s.ledger.map(function(e){
+    return '<tr><td>'+fmtThaiDate(e.date)+'</td><td>'+esc(e.type)+'</td><td>'+(e.type==='จ่าย'?'-':'+')+e.amount+' ฿</td><td style="text-align:left;">'+esc(e.note||'')+'</td></tr>';
+  }).join('') : '<tr><td colspan="4">ไม่มีรายการบันทึกเอง</td></tr>';
   const w=window.open('','_blank');
-  w.document.write('<html><head><title>สรุปยอดคำร้องขอบัตร</title>'
+  w.document.write('<html><head><title>สรุปการเงินบัตร</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">'
     +'<style>body{font-family:Sarabun,sans-serif;padding:20px;}h3,h4{text-align:center;margin:2px;}'
     +'.logo{display:block;margin:0 auto 6px;height:80px;}'
-    +'table{width:100%;border-collapse:collapse;margin-top:12px;}th,td{border:1px solid #999;padding:6px 8px;font-size:14px;text-align:center;}'
-    +'th{background:#1e3a8a;color:#fff;}tfoot td{font-weight:700;background:#dcfce7;}</style></head><body>'
+    +'table{width:100%;border-collapse:collapse;margin:8px 0;}th,td{border:1px solid #999;padding:6px 8px;font-size:14px;text-align:center;}'
+    +'th{background:#1e3a8a;color:#fff;}.sum td{font-weight:700;background:#dcfce7;}'
+    +'.grid{display:flex;gap:10px;text-align:center;margin-top:10px;}.grid div{flex:1;border:1px solid #999;padding:8px;border-radius:6px;}</style></head><body>'
     +'<img class="logo" src="'+LOGO+'" onerror="this.style.display=\'none\'">'
-    +'<h3>โรงเรียนสยามกลการ 4 | สพป.มุกดาหาร</h3><h4>สรุปยอดค่าใช้จ่ายคำร้องขอบัตรนักเรียน</h4>'
-    +'<p style="text-align:center;margin:4px;">เฉพาะคำร้องที่ดำเนินการเรียบร้อย · '+ayLabel+'</p>'
+    +'<h3>โรงเรียนสยามกลการ 4 | สพป.มุกดาหาร</h3><h4>สรุปการเงินคำร้องขอบัตรนักเรียน</h4>'
+    +'<p style="text-align:center;margin:4px;">ช่วง: '+esc(s.rg.label)+'</p>'
     +'<p style="text-align:center;color:#666;font-size:13px;">พิมพ์เมื่อ '+fmtThaiDate(new Date())+' '+fmtThaiTime(new Date())+'</p>'
-    +'<table><thead><tr><th style="text-align:left;">รายการ</th><th>ราคา/หน่วย</th><th>วันนี้</th><th>เดือนนี้</th><th>ปีการศึกษานี้</th></tr></thead>'
-    +'<tbody>'+row('บัตร (ออกใหม่)','card')+row('สายคล้องคอ','lanyard')+row('ซองใส','cover')+'</tbody>'
-    +'<tfoot><tr><td colspan="2" style="text-align:left;">รวมเงิน</td>'
-    +'<td>'+a.today.baht+' ฿</td><td>'+a.month.baht+' ฿</td><td>'+a.year.baht+' ฿</td></tr>'
-    +'<tr><td colspan="2" style="text-align:left;">จำนวนคำร้อง</td>'
-    +'<td>'+a.today.count+'</td><td>'+a.month.count+'</td><td>'+a.year.count+'</td></tr></tfoot></table>'
+    +'<h4 style="text-align:left;">รายได้จากคำร้อง (ดำเนินการเสร็จสิ้น)</h4>'
+    +'<table><thead><tr><th style="text-align:left;">รายการ</th><th>เงิน</th></tr></thead>'
+    +'<tbody>'+irow('ออกบัตรใหม่','card')+irow('สายคล้องคอ','lanyard')+irow('ซองใส','cover')+irow('นักเรียนย้ายเข้าใหม่','transfer')+'</tbody>'
+    +'<tfoot class="sum"><tr><td style="text-align:left;">รวมรายได้จากคำร้อง</td><td>'+s.incBaht+' ฿</td></tr></tfoot></table>'
+    +'<h4 style="text-align:left;">รายการบันทึกเอง</h4>'
+    +'<table><thead><tr><th>วันที่</th><th>ประเภท</th><th>เงิน</th><th style="text-align:left;">หมายเหตุ</th></tr></thead><tbody>'+ledRows+'</tbody></table>'
+    +'<div class="grid"><div>รวมรับ<br><b>'+s.totalIn+' ฿</b></div><div>รวมจ่าย<br><b>'+s.ledOut+' ฿</b></div><div>คงเหลือสุทธิ<br><b>'+s.balance+' ฿</b></div></div>'
     +'<p style="margin-top:30px;text-align:right;">ผู้พิมพ์รายงาน: '+esc(currentUser.name)+'</p>'
     +'<scr'+'ipt>window.onload=function(){setTimeout(function(){window.print();},400);};</scr'+'ipt>'
     +'</body></html>');
