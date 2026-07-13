@@ -201,6 +201,28 @@ let currentUser = null;
 const SESSION_KEY = 'sk4_session';
 const SESSION_HOURS = 1; // ให้ session หมดอายุใน 12 ชม. (ปรับได้)
 
+/* ===== แคชกลางรายชื่อนักเรียน ใช้ร่วมทั้งแอป โหลดครั้งเดียว ===== */
+let _studentCache = null;      // ข้อมูลที่โหลดแล้ว
+let _studentPromise = null;    // Promise ที่กำลังโหลดอยู่ (กันยิงซ้ำ)
+
+function loadStudentsCached(force){
+  if(force){ _studentCache=null; _studentPromise=null; }
+  if(_studentCache) return Promise.resolve(_studentCache);   // มีแล้ว คืนทันที
+  if(_studentPromise) return _studentPromise;                // กำลังโหลด รอตัวเดิม
+  _studentPromise = api('getStudents').then(function(list){
+    _studentCache = list || [];
+    _studentPromise = null;
+    return _studentCache;
+  }).catch(function(e){
+    _studentPromise = null;    // ล้มแล้วให้ลองใหม่ได้
+    throw e;
+  });
+  return _studentPromise;
+}
+
+// เรียกทุกครั้งที่ข้อมูลนักเรียนเปลี่ยน เพื่อให้โหลดใหม่รอบหน้า
+function invalidateStudentCache(){ _studentCache=null; _studentPromise=null; }
+
 function saveSession(user){
   const payload = { user: user, exp: Date.now() + SESSION_HOURS*3600*1000 };
   try{ localStorage.setItem(SESSION_KEY, JSON.stringify(payload)); }catch(e){}
@@ -932,7 +954,7 @@ function renderCardRequest(){
   +'</div>';
 
   // โหลดรายชื่อครั้งเดียว แล้วเก็บไว้ในแคช
-  api('getStudents').then(function(list){
+  loadStudentsCached().then(function(list){
     crStudentsCache = list || [];
     const inp=document.getElementById('crSearch');
     const hint=document.getElementById('crSearchHint');
@@ -948,9 +970,9 @@ function renderCardRequest(){
 function crLiveSearch(){
   const box=document.getElementById('crMatchList');
   const q=document.getElementById('crSearch').value.trim().toLowerCase();
-  if(!crStudentsCache){ return; }
+  if(!_studentCache){ return; }
   if(!q){ box.innerHTML=''; return; }
-  const hits=crStudentsCache.filter(function(s){
+  const hits=_studentCache.filter(function(s){
     return String(s.code).toLowerCase().indexOf(q)!==-1
         || ((s.prefix||'')+s.name).toLowerCase().indexOf(q)!==-1;
   }).slice(0,15);
@@ -1439,9 +1461,9 @@ function studentModal(s){
   }).then(function(r){
     if(r.isConfirmed && r.value){
       showLoader(true);
-      api('saveStudent',r.value).then(function(res){
+        api('saveStudent',r.value).then(function(res){
         showLoader(false);
-        if(res.ok){toast('success','บันทึกแล้ว');loadStudents();}
+        if(res.ok){invalidateStudentCache();toast('success','บันทึกแล้ว');loadStudents();}
         else Swal.fire('ผิดพลาด',res.message,'error');
       }).catch(function(err){ showLoader(false); Swal.fire('ผิดพลาด',err.message,'error'); });
     }
@@ -1482,7 +1504,7 @@ function delStudent(row,name){
     icon:'warning',showCancelButton:true,
     confirmButtonText:'<i class="bi bi-trash"></i> ลบ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
   .then(function(r){ if(r.isConfirmed){ showLoader(true);
-    api('deleteStudent',row).then(function(){showLoader(false);toast('success','ลบแล้ว');loadStudents();})
+    api('deleteStudent',row).then(function(){invalidateStudentCache();showLoader(false);toast('success','ลบแล้ว');loadStudents();})
       .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
 }
 
@@ -1495,7 +1517,7 @@ function askDeleteSelected(){
     icon:'warning',showCancelButton:true,
     confirmButtonText:'<i class="bi bi-trash"></i> ลบ '+rows.length+' คน',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
   .then(function(r){ if(r.isConfirmed){ showLoader(true);
-    api('deleteStudents',rows).then(function(res){showLoader(false);
+    api('deleteStudents',rows).then(function(res){invalidateStudentCache();showLoader(false);
       toast('success','ลบแล้ว '+(res.deleted||rows.length)+' คน'); loadStudents();})
       .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
 }
@@ -1510,7 +1532,7 @@ function askDeleteGrade(){
     icon:'warning',showCancelButton:true,
     confirmButtonText:'<i class="bi bi-trash"></i> ลบทั้งห้อง',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'})
   .then(function(r){ if(r.isConfirmed){ showLoader(true);
-    api('deleteStudentsByGrade',grade).then(function(res){showLoader(false);
+    api('deleteStudentsByGrade',grade).then(function(res){invalidateStudentCache();showLoader(false);
       toast('success','ลบแล้ว '+(res.deleted||count)+' คน'); loadStudents();})
       .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
 }
@@ -1529,7 +1551,7 @@ function askDeleteAll(){
       return true;
     }})
   .then(function(r){ if(r.isConfirmed){ showLoader(true);
-    api('deleteAllStudents').then(function(res){showLoader(false);
+    api('deleteAllStudents').then(function(res){invalidateStudentCache();showLoader(false);
       toast('success','ลบนักเรียนทั้งหมดแล้ว ('+(res.deleted||total)+' คน)'); loadStudents();})
       .catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');}); }});
 }
@@ -1543,6 +1565,7 @@ function importExcel(e){
     if(!rows.length){toast('warning','ไฟล์ว่าง');return;}
     showLoader(true);
     api('importStudents',rows).then(function(res){
+      invalidateStudentCache();
       showLoader(false);
       Swal.fire('นำเข้าเสร็จสิ้น','เพิ่ม '+res.added+' คน · ข้าม(ซ้ำ) '+res.skipped+' คน','success');
       loadStudents();
