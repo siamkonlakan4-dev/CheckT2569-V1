@@ -666,17 +666,14 @@ function onScan(text){
 let lastRequestTime = 0;
 
 function doManual(){
-  const now = Date.now();
-  if(now - lastRequestTime < 1500) return;
-  lastRequestTime = now;
-
-  const v = document.getElementById('manualCode').value.trim();
-  if(!v){toast('warning','กรอกรหัสนักเรียน');return;}
-
+  const inp = document.getElementById('manualCode');
+  const v = inp.value.trim();
+  inp.value = '';
+  inp.focus();
+  if(!v){ toast('warning','กรอกรหัสนักเรียน'); return; }
   submitCheckin(v);
-  document.getElementById('manualCode').value='';
-  document.getElementById('manualCode').focus();
 }
+  
 function successPopup(student){
   Swal.fire({
     icon: 'success',
@@ -691,34 +688,38 @@ function successPopup(student){
     timerProgressBar: true
   });
 }
-  let lastRequest = 0;
+
+let recentScans = {};
 function submitCheckin(code){
-
+  code = String(code || '').trim();
+  if(!code) return;
   const now = Date.now();
-  if(now - lastRequest < 1500) return; // กันยิงซ้ำ
-  lastRequest = now;
+  if(recentScans[code] && now - recentScans[code] < 3000) return; // รหัสเดิมภายใน 3 วิ = ข้าม
+  recentScans[code] = now;
 
-  api('checkIn',String(code).trim(),currentUser.name,currentCheckinActivity)
+  api('checkIn', code, currentUser.name, currentCheckinActivity)
   .then(function(res){
     if(res.ok){
       beep(true);
-      successPopup(res.student);
+      toast('success','✅ '+res.student.name+' ('+res.status+')');
       prependLiveRow(res);
-    }
-    else if(res.type==='duplicate'){
+    } else if(res.type==='duplicate'){
       beep(false);
       toast('info','⚠️ '+res.message);
-    }
-    else{
+    } else {
       beep(false);
       toast('error','❌ '+res.message);
     }
+    refocusManual();
   })
-  .catch(function(e){
-    beep(false);
-    toast('error',e.message);
-  });
+  .catch(function(e){ beep(false); toast('error',e.message); refocusManual(); });
 }
+
+function refocusManual(){
+  const inp = document.getElementById('manualCode');
+  if(inp) inp.focus();
+}
+  
 function prependLiveRow(res){
   const tb=document.getElementById('liveTable'); if(!tb) return;
   const empty=tb.querySelector('td[colspan]'); if(empty) tb.innerHTML='';
@@ -1655,21 +1656,6 @@ function thaiDT(){
 })();
 setInterval(function(){ if(document.getElementById('liveTable')) refreshLive(false); },15000);
 
-let typingTimer;
-
-document.addEventListener('input', function(e){
-  if(e.target.id !== 'manualCode') return;
-
-  clearTimeout(typingTimer);
-
-  typingTimer = setTimeout(function(){
-    const v = e.target.value.trim();
-    if(v.length >= 4){
-      submitCheckin(v);
-      e.target.value='';
-    }
-  }, 500);
-});
 </script>
 </body>
 </html>
