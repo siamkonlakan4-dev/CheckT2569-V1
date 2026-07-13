@@ -472,7 +472,7 @@ function renderCheckin(){
   + '<span class="badge bg-primary" id="todayCount">0 คน</span></div>'
   + '<div class="card-body table-responsive" style="max-height:520px;overflow:auto;">'
   + '<table class="table table-sm table-hover"><thead class="table-light" style="position:sticky;top:0;"><tr>'
-  + '<th>เวลา</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th></tr></thead>'
+  + '<th>เวลา</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th><th></th></tr></thead>'
   + '<tbody id="liveTable"></tbody></table></div></div></div></div>';
 
   api('getActivities').then(function(list){
@@ -748,9 +748,12 @@ function prependLiveRow(res){
   const empty=tb.querySelector('td[colspan]'); if(empty) tb.innerHTML='';
   const badge = res.status==='ปกติ'?'badge-present':'badge-late';
   const tr=document.createElement('tr'); tr.className='scan-result-row';
+  tr.setAttribute('data-att-row', res.row || '');
   tr.innerHTML='<td>'+fmtThaiTime(res.time)+'</td><td>'+esc(res.student.code)+'</td>'
     +'<td>'+esc(res.student.name)+'</td><td>'+esc(res.student.grade)+'</td>'
-    +'<td><span class="badge '+badge+'">'+res.status+'</span></td>';
+    +'<td><span class="badge '+badge+'">'+res.status+'</span></td>'
+    +'<td class="text-end"><button class="btn btn-sm btn-outline-danger" '
+    +'onclick="deleteCheckin(\''+esc(res.row||'')+'\',\''+esc(res.student.name)+'\')"><i class="bi bi-trash"></i></button></td>';
   tb.insertBefore(tr, tb.firstChild);
   const cnt=document.getElementById('todayCount');
   if(cnt) cnt.innerText = tb.querySelectorAll('tr').length+' คน';
@@ -762,10 +765,40 @@ function refreshLive(flash){
     if(!tb)return;
     tb.innerHTML = rows.map(function(r,i){
       const badge = r.status==='ปกติ'?'badge-present':'badge-late';
-      return '<tr class="'+(flash&&i===0?'scan-result-row':'')+'"><td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.code)+'</td>'
+      return '<tr data-att-row="'+esc(r.row||'')+'" class="'+(flash&&i===0?'scan-result-row':'')+'">'
+        +'<td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.code)+'</td>'
         +'<td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td>'
-        +'<td><span class="badge '+badge+'">'+r.status+'</span></td></tr>';
-    }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ยังไม่มีการเช็กชื่อกิจกรรมนี้วันนี้</td></tr>';
+        +'<td><span class="badge '+badge+'">'+r.status+'</span></td>'
+        +'<td class="text-end"><button class="btn btn-sm btn-outline-danger" '
+        +'onclick="deleteCheckin(\''+esc(r.row||'')+'\',\''+esc(r.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+    }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีการเช็กชื่อกิจกรรมนี้วันนี้</td></tr>';
+  });
+}
+
+function deleteCheckin(row, name){
+  if(!row){ toast('warning','ไม่พบรายการ (อาจเป็นข้อมูลเก่าก่อนเปิดฟีเจอร์นี้)'); return; }
+  Swal.fire({
+    title:'ลบรายการเช็กชื่อ?',
+    html: esc(name||'') + '<br><small class="text-muted">ลบได้เฉพาะรายการของวันนี้</small>',
+    icon:'warning', showCancelButton:true,
+    confirmButtonText:'<i class="bi bi-trash"></i> ลบ', cancelButtonText:'ยกเลิก',
+    confirmButtonColor:'#dc2626'
+  }).then(function(r){
+    if(!r.isConfirmed) return;
+    showLoader(true);
+    api('deleteAttendance', row).then(function(res){
+      showLoader(false);
+      if(res.ok){
+        toast('success','ลบรายการของ '+(res.name||'')+' แล้ว');
+        const el=document.querySelector('[data-att-row="'+row+'"]');
+        if(el) el.remove();
+        const tb=document.getElementById('liveTable');
+        const cnt=document.getElementById('todayCount');
+        if(tb && cnt) cnt.innerText = tb.querySelectorAll('tr[data-att-row]').length+' คน';
+      } else {
+        toast('error', res.message);
+      }
+    }).catch(function(e){ showLoader(false); toast('error', e.message); });
   });
 }
 
