@@ -1006,7 +1006,9 @@ function crTrack(){
 /* ============ จัดการคำร้องบัตร (แอดมิน) ============ */
 function renderCardAdmin(){
   document.getElementById('content').innerHTML =
-  '<div class="card mb-3"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">'
+  '<div class="card mb-3"><div class="card-header"><i class="bi bi-cash-coin"></i> สรุปยอดค่าใช้จ่าย (ดำเนินการเรียบร้อย)</div>'
+  +'<div class="card-body" id="cardFinance"><div class="text-center py-3"><div class="spinner-border text-primary"></div></div></div></div>'
+  +'<div class="card mb-3"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">'
   +'<span><i class="bi bi-card-checklist"></i> จัดการคำร้องขอบัตร</span>'
   +'<div class="d-flex gap-2 flex-wrap">'
   +'<select id="caFilter" class="form-select form-select-sm" style="max-width:190px;" onchange="loadCardAdmin()">'
@@ -1016,7 +1018,7 @@ function renderCardAdmin(){
   +'<div class="card-body" id="caBody"><div class="text-center py-4"><div class="spinner-border text-primary"></div></div></div></div>'
   +'<div class="card"><div class="card-header"><i class="bi bi-bar-chart"></i> สถิตินักเรียนที่ขอออกบัตรบ่อย</div>'
   +'<div class="card-body table-responsive" id="caStats"></div></div>';
-  loadCardAdmin(); loadCardStats();
+  loadCardFinance(); loadCardAdmin(); loadCardStats();
 }
 
 function loadCardAdmin(){
