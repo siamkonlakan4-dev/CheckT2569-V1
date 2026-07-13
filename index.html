@@ -908,16 +908,18 @@ function cardStatusBadge(st){
   return '<span class="badge '+(m[st]||'bg-secondary')+'">'+esc(st)+'</span>';
 }
 
+let crStudentsCache = null;   // แคชรายชื่อนักเรียนสำหรับหน้าคำร้อง
+
 function renderCardRequest(){
   document.getElementById('content').innerHTML =
   '<div class="row g-3">'
   +'<div class="col-lg-6"><div class="card"><div class="card-header"><i class="bi bi-card-heading"></i> ส่งคำร้องขอทำบัตรใหม่</div>'
   +'<div class="card-body">'
   +'<label class="form-label">ค้นหานักเรียน (รหัส / ชื่อ)</label>'
-  +'<div class="input-group mb-3">'
-  +'<input id="crSearch" class="form-control" placeholder="พิมพ์รหัสหรือชื่อ" onkeydown="if(event.key===\'Enter\')crFindStudent()">'
-  +'<button class="btn btn-primary" onclick="crFindStudent()"><i class="bi bi-search"></i> ค้นหา</button>'
-  +'</div><div id="crStudentCard"></div>'
+  +'<input id="crSearch" class="form-control" placeholder="พิมพ์รหัสหรือชื่อ" autocomplete="off" oninput="crLiveSearch()" disabled>'
+  +'<div id="crSearchHint" class="form-text"><span class="spinner-border spinner-border-sm"></span> กำลังโหลดรายชื่อนักเรียน...</div>'
+  +'<div id="crMatchList" class="list-group mt-1" style="max-height:260px;overflow:auto;"></div>'
+  +'<div id="crStudentCard" class="mt-2"></div>'
   +'</div></div></div>'
   +'<div class="col-lg-6"><div class="card"><div class="card-header"><i class="bi bi-clock-history"></i> ติดตามสถานะคำร้อง</div>'
   +'<div class="card-body">'
@@ -928,42 +930,72 @@ function renderCardRequest(){
   +'</div><div id="crTrackResult"></div>'
   +'</div></div></div>'
   +'</div>';
+
+  // โหลดรายชื่อครั้งเดียว แล้วเก็บไว้ในแคช
+  api('getStudents').then(function(list){
+    crStudentsCache = list || [];
+    const inp=document.getElementById('crSearch');
+    const hint=document.getElementById('crSearchHint');
+    if(inp){ inp.disabled=false; inp.focus(); }
+    if(hint) hint.innerHTML='<i class="bi bi-lightning-charge"></i> พิมพ์รหัสหรือชื่อ ระบบจะค้นหาทันที ('+crStudentsCache.length+' คน)';
+  }).catch(function(e){
+    const hint=document.getElementById('crSearchHint');
+    if(hint) hint.innerHTML='<span class="text-danger">โหลดรายชื่อไม่ได้: '+esc(e.message)+'</span>';
+  });
 }
 
-function crFindStudent(){
-  const q=document.getElementById('crSearch').value.trim();
-  if(!q){toast('warning','กรอกคำค้นหา');return;}
-  showLoader(true);
-  api('getStudents').then(function(list){
-    showLoader(false);
-    const ql=q.toLowerCase();
-    const s=list.find(function(x){
-      return String(x.code).toLowerCase()===ql
-          || ((x.prefix||'')+x.name).toLowerCase().indexOf(ql)!==-1;
-    });
-    const box=document.getElementById('crStudentCard');
-    if(!s){ cardSelectedStudent=null; box.innerHTML='<div class="alert alert-danger">ไม่พบนักเรียน</div>'; return; }
-    cardSelectedStudent=s;
-    const photo = s.photo
-      ? '<img src="'+esc(s.photo)+'" class="photo">'
-      : '<div class="photo d-inline-flex align-items-center justify-content-center"><i class="bi bi-person" style="font-size:2rem;color:#94a3b8;"></i></div>';
-    box.innerHTML=
-      '<div class="id-card" style="width:100%;display:block;margin:0;">'
-      +'<div class="head"><img src="'+LOGO+'" onerror="this.style.display=\'none\'">'
-      +'<div style="font-weight:600;">โรงเรียนสยามกลการ 4</div></div>'
-      +'<div class="body">'+photo
-      +'<div class="fw-bold mt-2">'+esc((s.prefix||'')+s.name)+'</div>'
-      +'<div class="text-muted small">รหัส '+esc(s.code)+'</div>'
-      +'<div class="text-muted small">ชั้น '+esc(s.grade)+' เลขที่ '+esc(s.no)+'</div>'
-      +'</div></div>'
-      +'<hr><h6 class="fw-bold">รายการที่ขอ</h6>'
-      + CARD_ITEMS.map(function(it,i){
-          return '<div class="form-check"><input class="form-check-input cr-item" type="checkbox" value="'+i+'" id="cr_item_'+i+'">'
-            +'<label class="form-check-label" for="cr_item_'+i+'">'+esc(it.label)+' ('+it.price+' บาท)</label></div>';
-        }).join('')
-      +'<input id="crNote" class="form-control form-control-sm mt-2" placeholder="หมายเหตุ (ถ้ามี)">'
-      +'<button class="btn btn-success w-100 mt-3" onclick="crSubmit()"><i class="bi bi-send"></i> ส่งคำร้อง</button>';
-  }).catch(function(e){showLoader(false);toast('error',e.message);});
+// ค้นสดขณะพิมพ์ (ในเครื่อง ไม่ยิงเน็ต) แสดงผลสูงสุด 15 รายการ
+function crLiveSearch(){
+  const box=document.getElementById('crMatchList');
+  const q=document.getElementById('crSearch').value.trim().toLowerCase();
+  if(!crStudentsCache){ return; }
+  if(!q){ box.innerHTML=''; return; }
+  const hits=crStudentsCache.filter(function(s){
+    return String(s.code).toLowerCase().indexOf(q)!==-1
+        || ((s.prefix||'')+s.name).toLowerCase().indexOf(q)!==-1;
+  }).slice(0,15);
+  if(!hits.length){ box.innerHTML='<div class="list-group-item text-muted">ไม่พบนักเรียน</div>'; return; }
+  box.innerHTML=hits.map(function(s){
+    const idx=crStudentsCache.indexOf(s);
+    return '<button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-2" onclick="crPickStudent('+idx+')">'
+      +(s.photo?'<img src="'+esc(s.photo)+'" class="student-photo" style="width:32px;height:32px;">':'<i class="bi bi-person-circle fs-4 text-muted"></i>')
+      +'<span><b>'+esc((s.prefix||'')+s.name)+'</b><br><small class="text-muted">รหัส '+esc(s.code)+' · ชั้น '+esc(s.grade)+'</small></span>'
+      +'</button>';
+  }).join('');
+}
+
+// เลือกนักเรียนจากผลค้นหา
+function crPickStudent(idx){
+  const s=crStudentsCache[idx];
+  if(!s) return;
+  cardSelectedStudent=s;
+  document.getElementById('crMatchList').innerHTML='';
+  document.getElementById('crSearch').value=(s.prefix||'')+s.name;
+  crShowStudentCard(s);
+}
+
+// แสดงการ์ดนักเรียน + รายการที่ขอ
+function crShowStudentCard(s){
+  const box=document.getElementById('crStudentCard');
+  const photo = s.photo
+    ? '<img src="'+esc(s.photo)+'" class="photo">'
+    : '<div class="photo d-inline-flex align-items-center justify-content-center"><i class="bi bi-person" style="font-size:2rem;color:#94a3b8;"></i></div>';
+  box.innerHTML=
+    '<div class="id-card" style="width:100%;display:block;margin:0;">'
+    +'<div class="head"><img src="'+LOGO+'" onerror="this.style.display=\'none\'">'
+    +'<div style="font-weight:600;">โรงเรียนสยามกลการ 4</div></div>'
+    +'<div class="body">'+photo
+    +'<div class="fw-bold mt-2">'+esc((s.prefix||'')+s.name)+'</div>'
+    +'<div class="text-muted small">รหัส '+esc(s.code)+'</div>'
+    +'<div class="text-muted small">ชั้น '+esc(s.grade)+' เลขที่ '+esc(s.no)+'</div>'
+    +'</div></div>'
+    +'<hr><h6 class="fw-bold">รายการที่ขอ</h6>'
+    + CARD_ITEMS.map(function(it,i){
+        return '<div class="form-check"><input class="form-check-input cr-item" type="checkbox" value="'+i+'" id="cr_item_'+i+'">'
+          +'<label class="form-check-label" for="cr_item_'+i+'">'+esc(it.label)+' ('+it.price+' บาท)</label></div>';
+      }).join('')
+    +'<input id="crNote" class="form-control form-control-sm mt-2" placeholder="หมายเหตุ (ถ้ามี)">'
+    +'<button class="btn btn-success w-100 mt-3" onclick="crSubmit()"><i class="bi bi-send"></i> ส่งคำร้อง</button>';
 }
 
 function crSubmit(){
