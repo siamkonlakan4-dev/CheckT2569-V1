@@ -1987,7 +1987,10 @@ function thaiDT(){
   const u = loadSession();
   if(u){ currentUser = u; startApp(); }
 })();
-setInterval(function(){ if(document.getElementById('liveTable')) refreshLive(false); },15000);
+setInterval(function(){
+  if(document.hidden) return;                                   // ซ่อนแท็บอยู่ ไม่ต้องยิง
+  if(document.getElementById('liveTable')) refreshLive(false);
+}, 30000);
 
 </script>
 </body>
