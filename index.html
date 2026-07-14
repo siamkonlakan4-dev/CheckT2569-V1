@@ -489,9 +489,12 @@ function renderCheckin(){
   + '<div class="input-group"><input type="text" id="manualCode" class="form-control form-control-lg" placeholder="รหัสนักเรียน" '
   + 'onkeydown="if(event.key===\'Enter\')doManual()"><button class="btn btn-primary" onclick="doManual()"><i class="bi bi-check-lg"></i> เช็กชื่อ</button></div>'
   + '</div></div></div>'
-  + '<div class="col-lg-7"><div class="card"><div class="card-header d-flex justify-content-between align-items-center">'
-  + '<span><i class="bi bi-clock-history"></i> ผลการเช็กชื่อล่าสุด (Real-time)</span>'
-  + '<span class="badge bg-primary" id="todayCount">0 คน</span></div>'
+  + '<div class="col-lg-7"><div class="card"><div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">'
+  + '<span><i class="bi bi-clock-history"></i> ผลการเช็กชื่อล่าสุด</span>'
+  + '<div class="d-flex align-items-center gap-2">'
+  + '<small class="text-muted" id="liveUpdated"></small>'
+  + '<button class="btn btn-outline-primary btn-sm" id="btnRefreshLive" onclick="refreshLive(false)"><i class="bi bi-arrow-clockwise"></i> รีเฟรช</button>'
+  + '<span class="badge bg-primary" id="todayCount">0 คน</span></div></div>'
   + '<div class="card-body table-responsive" style="max-height:520px;overflow:auto;">'
   + '<table class="table table-sm table-hover"><thead class="table-light" style="position:sticky;top:0;"><tr>'
   + '<th>เวลา</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th><th></th></tr></thead>'
@@ -781,19 +784,28 @@ function prependLiveRow(res){
   if(cnt) cnt.innerText = tb.querySelectorAll('tr').length+' คน';
 }
 function refreshLive(flash){
+  const btn=document.getElementById('btnRefreshLive');
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm"></span> กำลังโหลด'; }
   api('getTodayAttendance',currentCheckinActivity).then(function(rows){
     const cnt=document.getElementById('todayCount'); if(cnt) cnt.innerText = rows.length+' คน';
     const tb=document.getElementById('liveTable');
-    if(!tb)return;
-    tb.innerHTML = rows.map(function(r,i){
-      const badge = r.status==='ปกติ'?'badge-present':'badge-late';
-      return '<tr data-att-row="'+esc(r.row||'')+'" class="'+(flash&&i===0?'scan-result-row':'')+'">'
-        +'<td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.code)+'</td>'
-        +'<td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td>'
-        +'<td><span class="badge '+badge+'">'+r.status+'</span></td>'
-        +'<td class="text-end"><button class="btn btn-sm btn-outline-danger" '
-        +'onclick="deleteCheckin(\''+esc(r.row||'')+'\',\''+esc(r.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
-    }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีการเช็กชื่อกิจกรรมนี้วันนี้</td></tr>';
+    if(tb){
+      tb.innerHTML = rows.map(function(r,i){
+        const badge = r.status==='ปกติ'?'badge-present':'badge-late';
+        return '<tr data-att-row="'+esc(r.row||'')+'" class="'+(flash&&i===0?'scan-result-row':'')+'">'
+          +'<td>'+fmtThaiTime(r.time)+'</td><td>'+esc(r.code)+'</td>'
+          +'<td>'+esc(r.name)+'</td><td>'+esc(r.grade)+'</td>'
+          +'<td><span class="badge '+badge+'">'+r.status+'</span></td>'
+          +'<td class="text-end"><button class="btn btn-sm btn-outline-danger" '
+          +'onclick="deleteCheckin(\''+esc(r.row||'')+'\',\''+esc(r.name)+'\')"><i class="bi bi-trash"></i></button></td></tr>';
+      }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีการเช็กชื่อกิจกรรมนี้วันนี้</td></tr>';
+    }
+    const up=document.getElementById('liveUpdated');
+    if(up) up.innerText='อัปเดต '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }).catch(function(e){
+    toast('error','โหลดรายการไม่ได้: '+e.message);
+  }).finally(function(){
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="bi bi-arrow-clockwise"></i> รีเฟรช'; }
   });
 }
 
@@ -1987,10 +1999,6 @@ function thaiDT(){
   const u = loadSession();
   if(u){ currentUser = u; startApp(); }
 })();
-setInterval(function(){
-  if(document.hidden) return;                                   // ซ่อนแท็บอยู่ ไม่ต้องยิง
-  if(document.getElementById('liveTable')) refreshLive(false);
-}, 30000);
 
 </script>
 </body>
