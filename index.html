@@ -342,7 +342,6 @@ function doLogin(){
     currentUser = res.user;
     saveSession(currentUser);
     startApp();
-    startApp();
   }).catch(function(e){showLoader(false);Swal.fire('ผิดพลาด','เชื่อมต่อ API ไม่ได้: '+e.message,'error');});
 }
 function logout(){
@@ -738,19 +737,24 @@ function successPopup(student){
 }
 
 let recentScans = {};
+const pendingCheckins = new Set();
 function submitCheckin(code){
   code = String(code || '').trim();
   if(!code) return;
+  const scanActivity=currentCheckinActivity;
+  const pendingKey=JSON.stringify([code,scanActivity]);
+  if(pendingCheckins.has(pendingKey)) return;
   const now = Date.now();
   if(recentScans[code] && now - recentScans[code] < 3000) return; // รหัสเดิมภายใน 3 วิ = ข้าม
   recentScans[code] = now;
 
-  api('checkIn', code, currentUser.name, currentCheckinActivity)
+  pendingCheckins.add(pendingKey);
+  api('checkIn', code, currentUser.name, scanActivity)
   .then(function(res){
     if(res.ok){
       beep(true);
       toast('success','✅ '+res.student.name+' ('+res.status+')');
-      prependLiveRow(res);
+      if(currentCheckinActivity===scanActivity) prependLiveRow(res);
     } else if(res.type==='duplicate'){
       beep(false);
       toast('info','⚠️ '+res.message);
@@ -760,7 +764,8 @@ function submitCheckin(code){
     }
     refocusManual();
   })
-  .catch(function(e){ beep(false); toast('error',e.message); refocusManual(); });
+  .catch(function(e){ beep(false); toast('error','ยังยืนยันการบันทึกไม่ได้ กรุณารีเฟรชตรวจสอบ: '+e.message); refocusManual(); })
+  .finally(function(){pendingCheckins.delete(pendingKey);});
 }
 
 function refocusManual(){
@@ -1032,51 +1037,33 @@ function crShowStudentCard(s){
     +'<button class="btn btn-success w-100 mt-3" onclick="crSubmit()"><i class="bi bi-send"></i> ส่งคำร้อง</button>';
 }
 
+let crSubmitting=false;
 function crSubmit(){
+  if(crSubmitting) return;
   if(!cardSelectedStudent){toast('warning','ยังไม่ได้เลือกนักเรียน');return;}
   const items=[...document.querySelectorAll('.cr-item:checked')].map(function(cb){return CARD_ITEMS[Number(cb.value)];});
   if(!items.length){toast('warning','เลือกอย่างน้อย 1 รายการ');return;}
   const note=(document.getElementById('crNote')||{}).value||'';
-  showLoader(true);
-
-  // ตรวจก่อนว่ามีคำร้องค้าง (สถานะยังไม่เป็น "ดำเนินการเรียบร้อย") หรือไม่
-  api('searchCardRequests', cardSelectedStudent.code).then(function(list){
-    const pending=(list||[]).filter(function(r){ return r.status!=='ดำเนินการเรียบร้อย'; });
-    if(pending.length){
-      showLoader(false);
-      const p=pending[0];
-      Swal.fire({
-        icon:'warning',
-        title:'มีคำร้องค้างอยู่แล้ว',
-        html:'นักเรียนคนนี้มีคำร้องที่ยังไม่เสร็จสิ้น<br>'
-            +'รายการ: <b>'+esc(p.items)+'</b><br>'
-            +'สถานะปัจจุบัน: '+cardStatusBadge(p.status)+'<br><br>'
-            +'<small class="text-muted">กรุณารอให้คำร้องเดิมดำเนินการเรียบร้อยก่อน จึงจะสร้างคำร้องใหม่ได้</small>'
-      });
-      return;
-    }
-    // ไม่มีคำร้องค้าง ส่งคำร้องได้ตามปกติ
-    return api('createCardRequest',{
-      student:cardSelectedStudent, items:items, note:note.trim(), requester:currentUser.name
-    }).then(function(res){
-      showLoader(false);
-      if(res&&res.ok){
-        Swal.fire('ส่งคำร้องแล้ว','คำร้องเลขที่ '+res.id,'success');
-        cardSelectedStudent=null;
-        document.getElementById('crStudentCard').innerHTML='';
-        document.getElementById('crSearch').value='';
-      }else{
-        Swal.fire('ผิดพลาด',(res&&res.message)||'ส่งคำร้องไม่สำเร็จ','error');
-      }
-    });
-  }).catch(function(e){showLoader(false);Swal.fire('ผิดพลาด',e.message,'error');});
+  crSubmitting=true; showLoader(true);
+  api('createCardRequest',{student:cardSelectedStudent,items:items,note:note.trim(),requester:currentUser.name})
+  .then(function(res){
+    if(!res || !res.ok) throw new Error((res&&res.message)||'ส่งคำร้องไม่สำเร็จ');
+    Swal.fire('ส่งคำร้องแล้ว','คำร้องเลขที่ '+res.id,'success');
+    cardSelectedStudent=null;
+    const card=document.getElementById('crStudentCard'); if(card) card.innerHTML='';
+    const input=document.getElementById('crSearch'); if(input) input.value='';
+  }).catch(function(e){Swal.fire('แจ้งผล',e.message,'error');})
+  .finally(function(){crSubmitting=false;showLoader(false);});
 }
+let crTrackToken=0;
 function crTrack(){
   const code=document.getElementById('crTrackCode').value.trim();
   if(!code){toast('warning','กรอกรหัสนักเรียน');return;}
   const box=document.getElementById('crTrackResult');
   box.innerHTML='<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
+  const trackToken=++crTrackToken;
   api('searchCardRequests',code).then(function(list){
+    if(trackToken!==crTrackToken || document.getElementById('crTrackResult')!==box) return;
     if(!list.length){box.innerHTML='<div class="alert alert-warning">ไม่พบคำร้องของรหัสนี้</div>';return;}
     box.innerHTML='<div class="table-responsive"><table class="table table-sm align-middle">'
       +'<thead><tr><th>วันที่</th><th>รายการ</th><th>สถานะ</th></tr></thead><tbody>'
@@ -1085,7 +1072,7 @@ function crTrack(){
             +'<td>'+esc(r.items)+'</td><td>'+cardStatusBadge(r.status)+'</td></tr>';
         }).join('')
       +'</tbody></table></div>';
-  }).catch(function(e){box.innerHTML='<div class="alert alert-danger">'+esc(e.message)+'</div>';});
+  }).catch(function(e){if(trackToken===crTrackToken && document.getElementById('crTrackResult')===box) box.innerHTML='<div class="alert alert-danger">'+esc(e.message)+'</div>';});
 }
 
 /* ============ จัดการคำร้องบัตร (แอดมิน) ============ */
@@ -1119,7 +1106,7 @@ function renderCardAdmin(){
   +'<div class="d-flex gap-2 flex-wrap">'
   +'<select id="caFilter" class="form-select form-select-sm" style="max-width:190px;" onchange="loadCardAdmin()">'
   +'<option value="">ทุกสถานะ</option>'+ CARD_STATUS.map(function(s){return '<option>'+s+'</option>';}).join('')+'</select>'
-  +'<input id="caSearch" class="form-control form-control-sm" style="max-width:190px;" placeholder="ค้นหา รหัส/ชื่อ" oninput="loadCardAdmin()">'
+  +'<input id="caSearch" class="form-control form-control-sm" style="max-width:190px;" placeholder="ค้นหา รหัส/ชื่อ" oninput="filterCardAdminLocal()">'
   +'</div></div>'
   +'<div class="card-body" id="caBody"><div class="text-center py-4"><div class="spinner-border text-primary"></div></div></div></div>'
   +'<div class="card"><div class="card-header"><i class="bi bi-bar-chart"></i> สถิตินักเรียนที่ขอออกบัตรบ่อย</div>'
@@ -1129,19 +1116,22 @@ function renderCardAdmin(){
   loadCardFinance(); loadCardAdmin(); loadCardStats();
 }
 
-function loadCardAdmin(){
-  const status=document.getElementById('caFilter').value;
-  const q=(document.getElementById('caSearch').value||'').trim().toLowerCase();
-  api('getCardRequests',status).then(function(list){
+let caRows = [];
+let caLoadToken = 0;
+let caStatusBusy = new Set();
+function filterCardAdminLocal(){
+  const input=document.getElementById('caSearch'); if(!input) return;
+  const q=(input.value||'').trim().toLowerCase();
+  const list=caRows;
     let rows=list;
     if(q) rows=rows.filter(function(r){return (r.code+' '+(r.prefix||'')+r.name).toLowerCase().indexOf(q)!==-1;});
-    const body=document.getElementById('caBody');
+    const body=document.getElementById('caBody'); if(!body) return;
     if(!rows.length){body.innerHTML='<div class="text-center text-muted py-3">ไม่มีคำร้อง</div>';return;}
     body.innerHTML='<div class="table-responsive"><table class="table table-hover align-middle">'
       +'<thead class="table-light"><tr><th>วันที่</th><th>รูป</th><th>นักเรียน</th><th>ชั้น/เลขที่</th><th>รายการ</th><th>ผู้แจ้ง</th><th>สถานะ</th><th>เปลี่ยนสถานะ</th></tr></thead><tbody>'
       + rows.map(function(r){
           const img=r.photo?'<img src="'+esc(r.photo)+'" class="student-photo">':'<div class="student-photo d-flex align-items-center justify-content-center"><i class="bi bi-person"></i></div>';
-          const sel='<select class="form-select form-select-sm" onchange="caUpdate(\''+esc(r.id)+'\',this.value)">'
+          const sel='<select data-request-id="'+esc(r.id)+'" class="form-select form-select-sm" onchange="caUpdate(\''+esc(r.id)+'\',this.value)">'
             + CARD_STATUS.map(function(s){return '<option'+(s===r.status?' selected':'')+'>'+s+'</option>';}).join('')+'</select>';
           return '<tr><td>'+fmtThaiDate(r.date)+'<br><small class="text-muted">'+fmtThaiTime(r.time)+'</small></td>'
             +'<td>'+img+'</td>'
@@ -1151,12 +1141,47 @@ function loadCardAdmin(){
             +'<td>'+cardStatusBadge(r.status)+'</td><td style="min-width:170px;">'+sel+'</td></tr>';
         }).join('')
       +'</tbody></table></div>';
+  document.querySelectorAll('#caBody select[data-request-id]').forEach(function(el){
+    el.disabled=caStatusBusy.has(el.dataset.requestId);
+  });
+}
+function loadCardAdmin(){
+  const filter=document.getElementById('caFilter');
+  const body=document.getElementById('caBody'); if(!filter || !body) return;
+  const token=++caLoadToken;
+  caRows=[];
+  body.innerHTML='<div class="text-center py-3">กำลังโหลดคำร้อง...</div>';
+  return api('getCardRequests',filter.value).then(function(list){
+    if(token!==caLoadToken || document.getElementById('caBody')!==body) return;
+    caRows=list||[];
+    filterCardAdminLocal();
+  }).catch(function(e){
+    if(token===caLoadToken && document.getElementById('caBody')===body)
+      body.innerHTML='<div class="alert alert-danger">'+esc(e.message)+'</div>';
   });
 }
 function caUpdate(id,status){
-  api('updateCardRequestStatus',id,status).then(function(){
-    toast('success','อัปเดตสถานะแล้ว'); loadCardAdmin(); loadCardStats(); loadCardFinance();
-  }).catch(function(e){toast('error',e.message);});
+  if(caStatusBusy.has(id)) return;
+  const old=caRows.find(function(r){ return String(r.id)===String(id); });
+  const oldStatus=old && old.status;
+  caStatusBusy.add(id);
+  document.querySelectorAll('#caBody select[data-request-id]').forEach(function(el){
+    if(el.dataset.requestId===String(id)) el.disabled=true;
+  });
+  api('updateCardRequestStatus',id,status).then(function(res){
+    if(!res || !res.ok) throw new Error((res&&res.message)||'อัปเดตไม่สำเร็จ');
+    toast('success','อัปเดตสถานะแล้ว');
+    if(document.getElementById('caBody')) loadCardAdmin();
+    if(!old || oldStatus==='ดำเนินการเรียบร้อย' || status==='ดำเนินการเรียบร้อย') loadCardFinance();
+  }).catch(function(e){
+    toast('error',e.message);
+    if(document.getElementById('caBody')) loadCardAdmin();
+  }).finally(function(){
+    caStatusBusy.delete(id);
+    document.querySelectorAll('#caBody select[data-request-id]').forEach(function(el){
+      if(el.dataset.requestId===String(id)) el.disabled=false;
+    });
+  });
 }
 function loadCardStats(){
   api('getCardRequestStats').then(function(list){
