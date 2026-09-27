@@ -476,6 +476,7 @@ function renderCheckin(){
   +'<label class="fw-bold mb-0"><i class="bi bi-calendar-event"></i> กิจกรรม:</label>'
   +'<select id="checkinActivity" class="form-select" style="max-width:340px;" onchange="onActivityChange()"></select>'
   +'<span class="text-muted small" id="actHint"></span></div></div>'
+  + '<div class="card mb-3"><div class="card-body"><b>สถานะการส่งข้อมูล • Fast Scan 2</b><div id="scanReady" class="small text-primary">กำลังเตรียมข้อมูล...</div><div class="small">รับรหัสแล้ว ≠ บันทึกสำเร็จ สามารถสแกนคนถัดไปได้ระหว่างรอ ห้ามปิดหน้าจนรายการรอเป็นศูนย์</div><div id="scanJobs" style="max-height:220px;overflow:auto;"></div></div></div>'
   + '<div class="row g-3">'
   + '<div class="col-lg-5"><div class="card"><div class="card-header"><i class="bi bi-qr-code-scan"></i> สแกน QR Code / Barcode</div>'
   + '<div class="card-body text-center">'
@@ -499,7 +500,14 @@ function renderCheckin(){
   + '<th>เวลา</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>สถานะ</th><th></th></tr></thead>'
   + '<tbody id="liveTable"></tbody></table></div></div></div></div>';
 
-  api('getActivities').then(function(list){
+  renderScanJobs();
+  const screen=document.getElementById('checkinActivity');
+  screen.disabled=true;
+  api('prepareCheckin').then(function(prepared){
+    if(document.getElementById('checkinActivity')!==screen) return;
+    const list=prepared.activities||[];
+    settings=prepared.settings||settings;
+    screen.disabled=false;
     activitiesCache=list;
     const open=list.filter(function(a){return a.status==='เปิด';});
     const sel=document.getElementById('checkinActivity');
@@ -507,6 +515,12 @@ function renderCheckin(){
       || '<option>เข้าแถวหน้าเสาธง</option>';
     currentCheckinActivity = sel.value;
     onActivityChange();
+    const ready=document.getElementById('scanReady');
+    if(ready) ready.textContent=prepared.rosterReady?'พร้อมสแกน • เตรียมข้อมูลแล้ว':'พร้อมสแกน • อ่านข้อมูลรายคน';
+  }).catch(function(e){
+    if(document.getElementById('checkinActivity')!==screen) return;
+    const ready=document.getElementById('scanReady');
+    if(ready) ready.textContent='เตรียมระบบไม่สำเร็จ กรุณาเปิดเมนูเช็กชื่อใหม่: '+e.message;
   });
 }
 /* ============ บันทึกสถานะด้วยตนเอง (ลา/มาสาย/ขาดเรียน/อื่นๆ) ============ */
@@ -738,34 +752,63 @@ function successPopup(student){
 
 let recentScans = {};
 const pendingCheckins = new Set();
+let scanJobs=[];
+window.addEventListener('beforeunload',function(e){
+  if(pendingCheckins.size){e.preventDefault();e.returnValue='';}
+});
+function renderScanJobs(){
+  const box=document.getElementById('scanJobs'); if(!box) return;
+  box.innerHTML='<div class="fw-bold my-2">กำลังรอคำตอบ '+pendingCheckins.size+' รายการ</div>'+scanJobs.map(function(job){
+    const color=job.state==='success'?'text-success':job.state==='pending'?'text-primary':'text-danger';
+    return '<div class="border-top py-1 '+color+'"><b>'+esc(job.code)+'</b> · '+esc(job.activity)+' — '+esc(job.message)
+      +(job.timing?'<div class="small text-dark">'+esc(job.timing)+'</div>':'')+'</div>';
+  }).join('');
+}
 function submitCheckin(code){
-  code = String(code || '').trim();
-  if(!code) return;
-  const scanActivity=currentCheckinActivity;
-  const pendingKey=JSON.stringify([code,scanActivity]);
-  if(pendingCheckins.has(pendingKey)) return;
-  const now = Date.now();
-  if(recentScans[code] && now - recentScans[code] < 3000) return; // รหัสเดิมภายใน 3 วิ = ข้าม
-  recentScans[code] = now;
-
-  pendingCheckins.add(pendingKey);
-  api('checkIn', code, currentUser.name, scanActivity)
-  .then(function(res){
+  code=String(code||'').trim(); if(!code) return;
+  const activitySelect=document.getElementById('checkinActivity');
+  if(!activitySelect || activitySelect.disabled){toast('warning','กำลังเตรียมกิจกรรม กรุณารอแล้วสแกนใหม่');return;}
+  const activity=currentCheckinActivity;
+  const key=JSON.stringify([code,activity]);
+  if(pendingCheckins.has(key)) return;
+  const now=Date.now();
+  if(recentScans[key] && now-recentScans[key]<3000) return;
+  // Bound concurrent requests without silently accepting a scan that was not sent.
+  if(pendingCheckins.size>=8){beep(false);toast('warning','มี 8 รายการกำลังรอ กรุณารอแล้วสแกนรหัส '+code+' ใหม่');return;}
+  recentScans[key]=now;
+  pendingCheckins.add(key);
+  const job={code:code,activity:activity,state:'pending',message:'รับรหัสแล้ว • กำลังบันทึก (ยังไม่ยืนยัน)',started:performance.now()};
+  scanJobs.unshift(job);
+  // Keep all outstanding/unconfirmed entries; retain the latest 30 completed entries.
+  let finished=0;
+  scanJobs=scanJobs.filter(function(j){return j.state==='pending'||j.state==='unconfirmed'||++finished<=30;});
+  renderScanJobs();refocusManual();
+  api('checkIn',code,currentUser.name,activity).then(function(res){
+    const roundTrip=performance.now()-job.started;
+    const p=res.perf;
+    job.timing='รวม '+(roundTrip/1000).toFixed(2)+' วินาที';
+    if(p){
+      job.timing+=' | ใน checkIn '+(p.totalMs/1000).toFixed(2)+' วินาที'
+        +' | นักเรียน '+((p.studentMs||0)/1000).toFixed(2)
+        +' | ตั้งค่า '+((p.configMs||0)/1000).toFixed(2)
+        +' | เขียน '+((p.writeMs||0)/1000).toFixed(2)
+        +' | '+(p.studentSource==='cache'?'แคช':'อ่านฐานข้อมูล');
+    }else job.timing+=' | backend ยังไม่ใช่ Fast Scan 2';
     if(res.ok){
-      beep(true);
-      toast('success','✅ '+res.student.name+' ('+res.status+')');
-      if(currentCheckinActivity===scanActivity) prependLiveRow(res);
-    } else if(res.type==='duplicate'){
-      beep(false);
-      toast('info','⚠️ '+res.message);
-    } else {
-      beep(false);
-      toast('error','❌ '+res.message);
+      job.state='success';job.message='บันทึกสำเร็จ: '+res.student.name+' ('+res.status+')';
+      beep(true);toast('success',job.message);
+      if(currentCheckinActivity===activity) prependLiveRow(res);
+    }else{
+      job.state=res.type==='unconfirmed'?'unconfirmed':'error';
+      job.message=res.message||'บันทึกไม่สำเร็จ';
+      beep(false);toast(res.type==='duplicate'?'info':'error',job.message);
     }
-    refocusManual();
-  })
-  .catch(function(e){ beep(false); toast('error','ยังยืนยันการบันทึกไม่ได้ กรุณารีเฟรชตรวจสอบ: '+e.message); refocusManual(); })
-  .finally(function(){pendingCheckins.delete(pendingKey);});
+  }).catch(function(e){
+    job.state='unconfirmed';
+    job.message='ยังยืนยันไม่ได้ กรุณารีเฟรชรายการเช็กชื่อเพื่อตรวจสอบ: '+e.message;
+    job.timing='รอ '+((performance.now()-job.started)/1000).toFixed(2)+' วินาที';
+    beep(false);toast('error',job.message);
+  }).finally(function(){pendingCheckins.delete(key);renderScanJobs();refocusManual();});
 }
 
 function refocusManual(){
@@ -775,6 +818,7 @@ function refocusManual(){
   
 function prependLiveRow(res){
   const tb=document.getElementById('liveTable'); if(!tb) return;
+  if(res.row && Array.from(tb.querySelectorAll('tr[data-att-row]')).some(function(el){return el.getAttribute('data-att-row')===String(res.row);})) return;
   const empty=tb.querySelector('td[colspan]'); if(empty) tb.innerHTML='';
   const badge = res.status==='ปกติ'?'badge-present':'badge-late';
   const tr=document.createElement('tr'); tr.className='scan-result-row';
